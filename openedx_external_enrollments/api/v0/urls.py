@@ -18,5 +18,9 @@ urlpatterns = [
         views.SalesforceEnrollmentView.as_view(),
         name='salesforce-enrollment',
     ),
-
+    url(
+        r'^enrollment$',
+        views.CoreEnrollmentListView.as_view(),
+        name='shell-enrollment',
+    ),
 ]

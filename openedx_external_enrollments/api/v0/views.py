@@ -3,15 +3,20 @@ This file contains the views for openedx-external-enrollments API.
 """
 import logging
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
-from rest_framework.views import APIView
 from rest_framework_oauth.authentication import OAuth2Authentication
+from rest_framework.parsers import JSONParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from enrollment.views import EnrollmentListView
 from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_course_by_id
 from openedx_external_enrollments.edxapp_wrapper.get_edx_rest_framework_extensions import get_jwt_authentication
 from openedx_external_enrollments.edxapp_wrapper.get_openedx_permissions import get_api_key_permission
+from openedx_external_enrollments.edxapp_wrapper.get_student import get_user
 from openedx_external_enrollments.external_enrollments.salesforce_external_enrollment import SalesforceEnrollment
 from openedx_external_enrollments.factory import ExternalEnrollmentFactory
 from openedx_external_enrollments.tasks import generate_salesforce_enrollment
@@ -114,3 +119,69 @@ class SalesforceEnrollmentView(APIView):
                 status=status.HTTP_200_OK,
                 safe=False,
             )
+
+
+class CoreEnrollmentListView(EnrollmentListView):
+    """
+    Extending EnrollmentListView
+
+    data = {
+        'user_email': 'address@example.org',
+        'username': 'Username',
+        'password': 'P4ssW0rd',
+        'fullname': 'Full Name',
+        'activate': True,
+        'is_active': True,
+        'course_mode': 'audit',
+        'course_id': 'course_id_pattern',
+    }
+
+    """
+
+    parser_classes = [JSONParser]
+
+    def post(self, request):
+        """
+        Wrapper for EnrollmentListView post method in order to allow
+        user_email parameter.
+        """
+        if 'user_email' in request.data:
+            email = request.data.get('user_email')
+
+            try:
+                user, _ = get_user(email=email)
+            except ObjectDoesNotExist:
+                user = self._create_edxapp_user(request.data)
+
+            request.data.update({
+                'user': user.username,
+                'mode': request.data.get('course_mode'),
+                'course_details': {'course_id': request.data.get('course_id')},
+            })
+
+        return super(CoreEnrollmentListView, self).post(request)
+
+    def _create_edxapp_user(self, data):
+        from django.db import transaction
+        from student.forms import AccountCreationForm
+        from student.helpers import do_create_account
+
+        form_data = {
+            'username': data.get('username'),
+            'email': data.get('user_email'),
+            'password': data.get('password'),
+            'name': data.get('fullname'),
+        }
+        # Go ahead and create the new user
+        with transaction.atomic():
+            form = AccountCreationForm(
+                data=form_data,
+                tos_required=False,
+        )
+        (user, profile, registration) = do_create_account(form)
+
+        if data.get('activate', False):
+            user.is_active = True
+            user.save()
+
+        return user
