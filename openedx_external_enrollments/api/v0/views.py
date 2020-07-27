@@ -128,7 +128,6 @@ class CoreEnrollmentListView(EnrollmentListView):
     data = {
         'user_email': 'address@example.org',
         'username': 'Username',
-        'password': 'P4ssW0rd',
         'fullname': 'Full Name',
         'activate': True,
         'is_active': True,
@@ -147,10 +146,14 @@ class CoreEnrollmentListView(EnrollmentListView):
         """
         if 'user_email' in request.data:
             email = request.data.get('user_email')
-
             try:
                 user, _ = get_user(email=email)
             except ObjectDoesNotExist:
+                import uuid
+                request.data.update({
+                    'password': uuid.uuid4().hex,
+                    'username': uuid.uuid4().hex,
+                })
                 user = self._create_edxapp_user(request.data)
 
             request.data.update({
@@ -172,6 +175,7 @@ class CoreEnrollmentListView(EnrollmentListView):
             'password': data.get('password'),
             'name': data.get('fullname'),
         }
+
         # Go ahead and create the new user
         with transaction.atomic():
             form = AccountCreationForm(
