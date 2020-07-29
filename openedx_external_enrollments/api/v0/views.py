@@ -136,6 +136,13 @@ class CoreEnrollmentListView(EnrollmentListView):
     }
 
     """
+    authentication_classes = [
+        get_jwt_authentication(),
+        OAuth2Authentication,
+    ]
+    permission_classes = [
+        get_api_key_permission(),
+    ]
 
     parser_classes = [JSONParser]
 
@@ -150,9 +157,11 @@ class CoreEnrollmentListView(EnrollmentListView):
                 user, _ = get_user(email=email)
             except ObjectDoesNotExist:
                 import uuid
+                import random
                 request.data.update({
                     'password': uuid.uuid4().hex,
-                    'username': uuid.uuid4().hex,
+                    'username': ''.join(random.sample(uuid.uuid4().hex, 20)),
+                    'activate': True,
                 })
                 user = self._create_edxapp_user(request.data)
 
