@@ -1,4 +1,7 @@
 """Openedx external enrollments factory file."""
+from openedx_external_enrollments.external_enrollments.dropbox_external_enrollment import (
+    DropboxInstanceExternalEnrollment,
+)
 from openedx_external_enrollments.external_enrollments.edx_enterprise_external_enrollment import (
     EdxEnterpriseExternalEnrollment,
 )
@@ -17,5 +20,7 @@ class ExternalEnrollmentFactory(object):
         """
         if controller.lower() == 'openedx':
             return EdxInstanceExternalEnrollment()
+        elif controller.lower() == 'dropbox':
+            return DropboxInstanceExternalEnrollment()
         else:
             return EdxEnterpriseExternalEnrollment()
