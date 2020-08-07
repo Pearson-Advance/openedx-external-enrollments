@@ -5,6 +5,9 @@ from openedx_external_enrollments.external_enrollments.edx_enterprise_external_e
 from openedx_external_enrollments.external_enrollments.edx_instance_external_enrollment import (
     EdxInstanceExternalEnrollment,
 )
+from openedx_external_enrollments.external_enrollments.greenfig_external_enrollment import (
+    GreenfigInstanceExternalEnrollment,
+)
 
 
 class ExternalEnrollmentFactory(object):
@@ -17,5 +20,7 @@ class ExternalEnrollmentFactory(object):
         """
         if controller.lower() == 'openedx':
             return EdxInstanceExternalEnrollment()
+        elif controller.lower() == 'greenfig':
+            return GreenfigInstanceExternalEnrollment()
         else:
             return EdxEnterpriseExternalEnrollment()
