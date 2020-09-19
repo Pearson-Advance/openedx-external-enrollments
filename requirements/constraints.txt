@@ -9,38 +9,33 @@
 # linking to it here is good.
 
 
-# Keep same platform version
-celery==3.1.25
+# Apply same platform constraint
+# We're not ready for Celery 4 yet, but 3.1.25+ are forward-compatible with it.
+# As of this writing, there's a 3.1.26.post2 with a very important bugfix
+# (although it is advertised in the changelog as 3.1.26.)
+celery>=3.1.25,<4.0.0
 
-# Django 2 drops Python 2.7 support
-Django<2.0.0
-
-# Keep same platform version
-djangorestframework==3.6.3
-
-# Keep same platform version
-edx-opaque-keys==0.4.4
-
-# Already in python3 standard library
-futures; python_version == "2.7"
+# Stay on the latest LTS release of Django
+Django<2.3
 
 # Keep same platform version
-jsonfield==2.0.2
+djangorestframework==3.9.4
+
+# 5.0.0 dropped support for Python 3.5
+isort<5.0.0
 
 # Keep same platform version
-oauthlib==2.1.0
+jsonfield2<3.1.0
+
+# Apply same platform constraint
+# mock version 4.0.0 drops support for python 3.5
+mock<4.0.0
 
 # Keep same platform version
-pycodestyle==2.4.0
-
-# pylint 2 drops Python 2.7 support
-pylint==1.9.3
+oauthlib==3.0.1
 
 # Keep same platform version
-requests==2.21.0
+pip-tools<5.0.0
 
-# Keep same platform version
-requests-oauthlib==1.1.0
-
-# Keep same platform version
-testfixtures==6.4.3
+# stevedore 2.0.0 requires python >= 3.6
+stevedore<2.0.0

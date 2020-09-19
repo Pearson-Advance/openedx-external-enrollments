@@ -6,35 +6,23 @@
 #
 amqp==1.4.9               # via kombu
 anyjson==0.3.3            # via kombu
-astroid==1.6.6            # via pylint
-backports.functools-lru-cache==1.6.1  # via astroid, isort, pylint
 billiard==3.3.0.23        # via celery
-celery==3.1.25            # via -c requirements/constraints.txt, -r requirements/base.in
-certifi==2020.4.5.1       # via requests
+celery==3.1.26.post2      # via -c requirements/constraints.txt, -r requirements/base.in
+certifi==2020.6.20        # via requests
 chardet==3.0.4            # via requests
-configparser==4.0.2       # via pylint
-django==1.11.29           # via -c requirements/constraints.txt, -r requirements/base.in, jsonfield
-git+https://github.com/edx/django-rest-framework-oauth.git@0a43e8525f1e3048efe4bc70c03de308a277197c#egg=djangorestframework-oauth==1.1.1  # via -r requirements/github.in
-djangorestframework==3.6.3  # via -c requirements/constraints.txt, -r requirements/base.in
-edx-opaque-keys==0.4.4    # via -c requirements/constraints.txt, -r requirements/base.in
-enum34==1.1.10            # via astroid
-futures==3.3.0 ; python_version == "2.7"  # via -c requirements/constraints.txt, isort
-idna==2.8                 # via requests
-isort==4.3.21             # via pylint
-jsonfield==2.0.2          # via -c requirements/constraints.txt, -r requirements/base.in
+django==2.2.16            # via -c requirements/constraints.txt, -r requirements/base.in, jsonfield2
+djangorestframework==3.9.4  # via -c requirements/constraints.txt, -r requirements/base.in
+edx-opaque-keys==2.1.1    # via -r requirements/base.in
+idna==2.10                # via requests
+jsonfield2==3.0.3         # via -c requirements/constraints.txt, -r requirements/base.in
 kombu==3.0.37             # via celery
-lazy-object-proxy==1.4.3  # via astroid
-mccabe==0.6.1             # via pylint
-oauthlib==2.1.0           # via -c requirements/constraints.txt, -r requirements/base.in, requests-oauthlib
-pbr==5.4.5                # via stevedore
-pycodestyle==2.4.0        # via -c requirements/constraints.txt, -r requirements/base.in
-pylint==1.9.3             # via -c requirements/constraints.txt, -r requirements/base.in
-pymongo==3.10.1           # via edx-opaque-keys
+oauthlib==3.0.1           # via -c requirements/constraints.txt, -r requirements/base.in, requests-oauthlib
+pbr==5.5.0                # via stevedore
+pymongo==3.11.0           # via edx-opaque-keys
 pytz==2020.1              # via celery, django
-requests-oauthlib==1.1.0  # via -c requirements/constraints.txt, -r requirements/base.in
-requests==2.21.0          # via -c requirements/constraints.txt, -r requirements/base.in, requests-oauthlib
-singledispatch==3.4.0.3   # via astroid, pylint
-six==1.15.0               # via astroid, edx-opaque-keys, pylint, singledispatch, stevedore
-stevedore==1.32.0         # via edx-opaque-keys
-urllib3==1.24.3           # via requests
-wrapt==1.12.1             # via astroid
+requests-oauthlib==1.3.0  # via -r requirements/base.in
+requests==2.24.0          # via -r requirements/base.in, requests-oauthlib
+six==1.15.0               # via edx-opaque-keys, stevedore
+sqlparse==0.3.1           # via django
+stevedore==1.32.0         # via -c requirements/constraints.txt, edx-opaque-keys
+urllib3==1.25.10          # via requests
