@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework_oauth.authentication import OAuth2Authentication
+from openedx.core.lib.api.authentication import OAuth2Authentication
 
 from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_course_by_id
 from openedx_external_enrollments.edxapp_wrapper.get_edx_rest_framework_extensions import get_jwt_authentication

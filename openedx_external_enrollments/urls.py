@@ -18,6 +18,6 @@ from django.conf.urls import include, url
 urlpatterns = [  # pylint: disable=invalid-name
     url(
         r'^api/',
-        include('openedx_external_enrollments.api.urls', namespace='api'),
+        include('openedx_external_enrollments.api.urls'),
     ),
 ]
