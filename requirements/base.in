@@ -1,15 +1,11 @@
-# Main requirements of your plugin application.
-
+# Main requirements openedx-external-enrollments.
 -c constraints.txt
--r github.in
 
 celery
 Django
-djangorestframework
+djangorestframework==3.9.4
 edx-opaque-keys
-jsonfield
+jsonfield2
 oauthlib
-pycodestyle
-pylint
-requests
 requests-oauthlib
+requests
