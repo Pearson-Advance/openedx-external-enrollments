@@ -45,18 +45,6 @@ class OpenedxExternalEnrollmentConfig(AppConfig):
             'lms.djangoapp': {
                 'relative_path': 'signal_receivers',
                 'receivers': [
-                    {
-                        'receiver_func_name': 'update_external_enrollment',
-                        'signal_path': 'django.db.models.signals.post_save',
-                        'dispatch_uid': 'update_external_enrollment_receiver',
-                        'sender_path': 'student.models.CourseEnrollment',
-                    },
-                    {
-                        'receiver_func_name': 'delete_external_enrollment',
-                        'signal_path': 'django.db.models.signals.post_delete',
-                        'dispatch_uid': 'delete_external_enrollment_receiver',
-                        'sender_path': 'student.models.CourseEnrollment',
-                    },
                 ],
             },
         },
