@@ -1,3 +1,8 @@
+### Version 2.2.0 - Oct 27, 2020
+**Changes:**
+
+  - Avoiding duplicated execution over signal receivers.
+
 ### Version 2.1.0 - Sep 23, 2020
 **Changes:**
 
