@@ -1,4 +1,6 @@
 """Openedx external enrollments factory file."""
+import logging
+
 from openedx_external_enrollments.external_enrollments.edx_enterprise_external_enrollment import (
     EdxEnterpriseExternalEnrollment,
 )
@@ -8,6 +10,8 @@ from openedx_external_enrollments.external_enrollments.edx_instance_external_enr
 from openedx_external_enrollments.external_enrollments.greenfig_external_enrollment import (
     GreenfigInstanceExternalEnrollment,
 )
+
+LOG = logging.getLogger(__name__)
 
 
 class ExternalEnrollmentFactory(object):
@@ -22,5 +26,11 @@ class ExternalEnrollmentFactory(object):
             return EdxInstanceExternalEnrollment()
         elif controller.lower() == 'greenfig':
             return GreenfigInstanceExternalEnrollment()
-        else:
+        elif controller.lower() == 'edx':
             return EdxEnterpriseExternalEnrollment()
+        else:
+            LOG.error(
+                'The external enrollment controller [%s] is not available',
+                controller,
+            )
+            raise NotImplementedError('external enrollment controller not implemented')
