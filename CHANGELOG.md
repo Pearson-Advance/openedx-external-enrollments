@@ -1,3 +1,8 @@
+### Version 2.3.0 - Oct 29, 2020
+**Changes:**
+
+  - Supporting greenfig integration.
+
 ### Version 2.2.0 - Oct 27, 2020
 **Changes:**
 
