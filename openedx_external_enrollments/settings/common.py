@@ -61,3 +61,8 @@ def plugin_settings(settings):
     settings.SALESFORCE_API_USERNAME = "salesforce-username"
     settings.SALESFORCE_API_PASSWORD = "salesforce-password"
     settings.SALESFORCE_ENROLLMENT_API_PATH = "services/apexrest/Applications_API"
+    settings.DROPBOX_API_ARG_DOWNLOAD = '{"path":"%s"}'
+    settings.DROPBOX_API_DOWNLOAD_URL = "/files/download"
+    settings.DROPBOX_API_ARG_UPLOAD = '{"path":"%s","mode":{".tag":"overwrite"}}'
+    settings.DROPBOX_API_UPLOAD_URL = "/files/upload"
+    settings.DROPBOX_DATE_FORMAT = "%m-%d-%Y %H:%M:%S"

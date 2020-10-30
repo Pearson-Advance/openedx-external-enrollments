@@ -46,3 +46,23 @@ def plugin_settings(settings):
         'SALESFORCE_API_PASSWORD',
         settings.SALESFORCE_API_PASSWORD
     )
+    settings.DROPBOX_API_ARG_DOWNLOAD = getattr(settings, 'ENV_TOKENS', {}).get(
+        'DROPBOX_API_ARG_DOWNLOAD',
+        settings.DROPBOX_API_ARG_DOWNLOAD
+    )
+    settings.DROPBOX_API_ARG_UPLOAD = getattr(settings, 'ENV_TOKENS', {}).get(
+        'DROPBOX_API_ARG_UPLOAD',
+        settings.DROPBOX_API_ARG_UPLOAD
+    )
+    settings.DROPBOX_API_DOWNLOAD_URL = getattr(settings, 'ENV_TOKENS', {}).get(
+        'DROPBOX_API_DOWNLOAD_URL',
+        settings.DROPBOX_API_DOWNLOAD_URL
+    )
+    settings.DROPBOX_API_UPLOAD_URL = getattr(settings, 'ENV_TOKENS', {}).get(
+        'DROPBOX_API_UPLOAD_URL',
+        settings.DROPBOX_API_UPLOAD_URL
+    )
+    settings.DROPBOX_DATE_FORMAT = getattr(settings, 'ENV_TOKENS', {}).get(
+        'DROPBOX_DATE_FORMAT',
+        settings.DROPBOX_DATE_FORMAT
+    )
