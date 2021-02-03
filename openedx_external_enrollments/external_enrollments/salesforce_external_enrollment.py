@@ -33,14 +33,22 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         return course
 
     def _get_enrollment_headers(self):
-        token = self._get_auth_token()
-        return {
-            "Content-Type": "application/json",
-            "Authorization": "{} {}".format(
-                token.get("token_type"),
-                token.get("access_token"),
-            )
+        headers = {
+            "Content-Type": "application/json"
         }
+
+        if settings.SALESFORCE_ENABLE_AUTHENTICATION:
+            token = self._get_auth_token()
+            headers.update(
+                {
+                    "Authorization": "{} {}".format(
+                        token.get("token_type"),
+                        token.get("access_token"),
+                    )
+                }
+            )
+
+        return headers
 
     @staticmethod
     def _get_auth_token():
@@ -257,6 +265,13 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
     def _get_enrollment_url(self, course_settings):
         """
+        We defined the SALESFORCE_ENABLE_AUTHENTICATION option to
+        have the control of this in each environment.
         """
-        token = self._get_auth_token()
-        return "{}/{}".format(token.get('instance_url'), settings.SALESFORCE_ENROLLMENT_API_PATH)
+        instance_url = settings.SALESFORCE_INSTANCE_URL
+
+        if settings.SALESFORCE_ENABLE_AUTHENTICATION:
+            token = self._get_auth_token()
+            instance_url = token.get('instance_url')
+
+        return "{}/{}".format(instance_url, settings.SALESFORCE_ENROLLMENT_API_PATH)
