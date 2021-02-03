@@ -38,6 +38,18 @@ def plugin_settings(settings):
         'SALESFORCE_API_CLIENT_SECRET',
         settings.SALESFORCE_API_CLIENT_SECRET
     )
+    settings.SALESFORCE_ENROLLMENT_API_PATH = getattr(settings, 'ENV_TOKENS', {}).get(
+        'SALESFORCE_ENROLLMENT_API_PATH',
+        settings.SALESFORCE_ENROLLMENT_API_PATH
+    )
+    settings.SALESFORCE_ENABLE_AUTHENTICATION = getattr(settings, 'ENV_TOKENS', {}).get(
+        'SALESFORCE_ENABLE_AUTHENTICATION',
+        settings.SALESFORCE_ENABLE_AUTHENTICATION
+    )
+    settings.SALESFORCE_INSTANCE_URL = getattr(settings, 'ENV_TOKENS', {}).get(
+        'SALESFORCE_INSTANCE_URL',
+        settings.SALESFORCE_INSTANCE_URL
+    )
     settings.SALESFORCE_API_USERNAME = getattr(settings, 'ENV_TOKENS', {}).get(
         'SALESFORCE_API_USERNAME',
         settings.SALESFORCE_API_USERNAME

@@ -33,14 +33,22 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         return course
 
     def _get_enrollment_headers(self):
-        token = self._get_auth_token()
-        return {
-            "Content-Type": "application/json",
-            "Authorization": "{} {}".format(
-                token.get("token_type"),
-                token.get("access_token"),
-            )
+        headers = {
+            "Content-Type": "application/json"
         }
+
+        if settings.SALESFORCE_ENABLE_AUTHENTICATION:
+            token = self._get_auth_token()
+            headers.update(
+                {
+                    "Authorization": "{} {}".format(
+                        token.get("token_type"),
+                        token.get("access_token"),
+                    )
+                }
+            )
+
+        return headers
 
     @staticmethod
     def _get_auth_token():
@@ -98,6 +106,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         if order_lines:
             try:
                 salesforce_data.update(self._get_program_of_interest_data(data, order_lines))
+                salesforce_data["Order_Number"] = data.get("number")
                 salesforce_data["Purchase_Type"] = "Program" if data.get("program") else "Course"
                 salesforce_data["PaymentAmount"] = data.get("paid_amount")
                 salesforce_data["Amount_Currency"] = data.get("currency")
@@ -137,17 +146,13 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                     request_time.strftime("%Y-%m-%d-%H:%M:%S"),
                 )
 
-            program_of_interest["Lead_Source"] = data.get(
+            program_of_interest["utm_params"] = data.get(
                 "utm_source",
-                program_of_interest.get("Lead_Source", "Open edX API"),
+                program_of_interest.get("utm_params", "Open edX API"),
             )
             program_of_interest["Secondary_Source"] = data.get(
                 "utm_campaign",
                 program_of_interest.get("Secondary_Source", ""),
-            )
-            program_of_interest["Tertiary_Source"] = data.get(
-                "utm_medium",
-                program_of_interest.get("Tertiary_Source", ""),
             )
         except Exception:  # pylint: disable=broad-except
             pass
@@ -169,10 +174,10 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 salesforce_settings = course.other_course_settings.get("salesforce_data")
                 course_data = dict()
                 course_data["CourseName"] = salesforce_settings.get("Program_Name") or course.display_name
-                course_data["CourseCode"] = self._get_salesforce_course_id(course, course_id)
+                course_data["CourseID"] = course_id
+                course_data["CourseRunID"] = self._get_salesforce_course_id(course, course_id)
                 course_data["CourseStartDate"] = self._get_course_start_date(course, line.get("user_email"), course_id)
                 course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d")
-                course_data["CourseDuration"] = "0"
             except Exception:  # pylint: disable=broad-except
                 pass
             else:
@@ -227,14 +232,12 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             "FirstName",
             "LastName",
             "Email",
-            "Company",
             "Institution_Hidden",
-            "Type_Hidden",
             "Program_of_Interest",
-            "Lead_Source",
+            "utm_params",
             "Secondary_Source",
-            "Tertiary_Source",
             "Drupal_ID",
+            "Order_Number",
             "Purchase_Type",
             "PaymentAmount",
             "Amount_Currency",
@@ -262,6 +265,13 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
     def _get_enrollment_url(self, course_settings):
         """
+        We defined the SALESFORCE_ENABLE_AUTHENTICATION option to
+        have the control of this in each environment.
         """
-        token = self._get_auth_token()
-        return "{}/{}".format(token.get('instance_url'), settings.SALESFORCE_ENROLLMENT_API_PATH)
+        instance_url = settings.SALESFORCE_INSTANCE_URL
+
+        if settings.SALESFORCE_ENABLE_AUTHENTICATION:
+            token = self._get_auth_token()
+            instance_url = token.get('instance_url')
+
+        return "{}/{}".format(instance_url, settings.SALESFORCE_ENROLLMENT_API_PATH)
