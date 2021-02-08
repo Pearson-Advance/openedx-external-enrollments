@@ -79,7 +79,6 @@ class SalesforceEnrollment(BaseExternalEnrollment):
     @staticmethod
     def _get_openedx_user(data):
         """
-
         :param data:
         :return:
         """
@@ -89,11 +88,15 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             try:
                 email = order_lines[0].get("user_email")
                 _, openedx_profile = get_user(email=email)
-                # TODO do not force logic assuming names with 2 words
-                first_name, last_name = openedx_profile.name.split(" ", 1)
-                user["FirstName"] = first_name.strip(" ")
-                user["LastName"] = last_name.strip(" ")
+
                 user["Email"] = email
+                if openedx_profile.user.first_name:
+                    user["FirstName"] = openedx_profile.user.first_name
+                    user["LastName"] = openedx_profile.user.last_name
+                else:
+                    first_name, last_name = openedx_profile.name.split(" ", 1)
+                    user["FirstName"] = first_name.strip(" ")
+                    user["LastName"] = last_name.strip(" ")
             except Exception:  # pylint: disable=broad-except
                 pass
 
