@@ -21,14 +21,18 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         return "salesforce"
 
     @staticmethod
-    def _get_course(course_id):
+    def _get_course_key(course_id):
+        course_key = CourseKey.from_string(course_id)
+        return course_key
+
+    def _get_course(self, course_id):
         """
         Return a course object.
         """
         if not course_id:
             return None
 
-        course_key = CourseKey.from_string(course_id)
+        course_key = self._get_course_key(course_id)
         course = get_course_by_id(course_key)
         return course
 
@@ -146,6 +150,10 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                     request_time.strftime("%Y-%m-%d-%H:%M:%S"),
                 )
 
+            program_of_interest["Lead_Source"] = program_of_interest.get(
+                "Lead_Source",
+                None
+            )
             program_of_interest["utm_params"] = data.get(
                 "utm_source",
                 program_of_interest.get("utm_params", "Open edX API"),
@@ -171,13 +179,15 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             try:
                 course_id = line.get("course_id")
                 course = self._get_course(course_id)
+                course_key = self._get_course_key(course_id)
                 salesforce_settings = course.other_course_settings.get("salesforce_data")
                 course_data = dict()
                 course_data["CourseName"] = salesforce_settings.get("Program_Name") or course.display_name
-                course_data["CourseID"] = course_id
+                course_data["CourseID"] = "{}+{}".format(course_key.org, course_key.course)
                 course_data["CourseRunID"] = self._get_salesforce_course_id(course, course_id)
                 course_data["CourseStartDate"] = self._get_course_start_date(course, line.get("user_email"), course_id)
                 course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d")
+                course_data["CourseDuration"] = "0"
             except Exception:  # pylint: disable=broad-except
                 pass
             else:
@@ -242,6 +252,9 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             "PaymentAmount",
             "Amount_Currency",
             "Course_Data",
+            "Lead_Source",
+            "Company",
+            "Type_Hidden",
         ]
         payload = {
             "enrollment": {}
