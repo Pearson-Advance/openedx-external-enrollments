@@ -157,9 +157,9 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 "Lead_Source",
                 None
             )
-            program_of_interest["utm_params"] = data.get(
+            program_of_interest["UTM_Parameters"] = data.get(
                 "utm_source",
-                program_of_interest.get("utm_params", "Open edX API"),
+                program_of_interest.get("UTM_Parameters", ""),
             )
             program_of_interest["Secondary_Source"] = data.get(
                 "utm_campaign",
