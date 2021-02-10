@@ -70,3 +70,6 @@ def plugin_settings(settings):
     settings.DROPBOX_API_ARG_UPLOAD = '{"path":"%s","mode":{".tag":"overwrite"}}'
     settings.DROPBOX_API_UPLOAD_URL = "/files/upload"
     settings.DROPBOX_DATE_FORMAT = "%m-%d-%Y %H:%M:%S"
+    settings.ICC_API_TOKEN= "icc-api-token"
+    settings.ICC_ENROLLMENT_API_FUNCTION = "enrol_manual_enrol_users"
+    settings.ICC_BASE_URL = "https://icchas11.stage.kineoplatforms.net/webservice/rest/server.php"

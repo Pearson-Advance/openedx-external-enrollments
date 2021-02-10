@@ -10,6 +10,9 @@ from openedx_external_enrollments.external_enrollments.edx_instance_external_enr
 from openedx_external_enrollments.external_enrollments.greenfig_external_enrollment import (
     GreenfigInstanceExternalEnrollment,
 )
+from openedx_external_enrollments.external_enrollments.icc_external_enrollment import (
+    ICCExternalEnrollment,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -28,6 +31,8 @@ class ExternalEnrollmentFactory(object):
             return GreenfigInstanceExternalEnrollment()
         elif controller.lower() == 'edx':
             return EdxEnterpriseExternalEnrollment()
+        elif controller.lower() == 'icc':
+            return ICCExternalEnrollment()
         else:
             LOG.error(
                 'The external enrollment controller [%s] is not available',

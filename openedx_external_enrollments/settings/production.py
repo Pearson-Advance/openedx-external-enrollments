@@ -86,3 +86,8 @@ def plugin_settings(settings):
         'DROPBOX_DATE_FORMAT',
         settings.DROPBOX_DATE_FORMAT
     )
+    settings.ICC_API_TOKEN = getattr(settings, 'ENV_TOKENS', {}).get(
+        'ICC_API_TOKEN',
+        settings.ICC_API_TOKEN
+    )
+
