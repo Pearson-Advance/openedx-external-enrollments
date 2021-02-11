@@ -56,13 +56,26 @@ class BaseExternalEnrollment(object):
             )
             return str(error), status.HTTP_400_BAD_REQUEST
         else:
-            LOG.info('External enrollment response for [%s] -- %s', self.__str__(), response.json())
-            log_details["response"] = response.json()
+            json_response = self._get_json_response(response)
+            LOG.info('External enrollment response for [%s] -- %s', self.__str__(), json_response)
+            log_details["response"] = json_response
             EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
                 request_type=str(self),
                 details=log_details,
             )
-            return response.json(), status.HTTP_200_OK
+
+            return json_response, status.HTTP_200_OK
+
+    def _get_json_response(self, response):
+        """Method that returns a default json response """
+        json_response = {'data': ''}
+
+        try:
+            json_response = response.json()
+        except Exception:
+            pass
+        finally:
+            return json_response
 
     def _get_enrollment_data(self, data, course_settings):
         """Unimplemented method necessary to execute _post_enrollment."""
