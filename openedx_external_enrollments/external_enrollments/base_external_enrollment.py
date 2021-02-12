@@ -67,7 +67,7 @@ class BaseExternalEnrollment(object):
             return json_response, status.HTTP_200_OK
 
     def _get_json_response(self, response):
-        """Method that returns a default json response """
+        """Method that returns a default json response. """
         json_response = {'data': ''}
 
         try:

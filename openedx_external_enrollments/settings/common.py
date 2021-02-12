@@ -75,5 +75,7 @@ def plugin_settings(settings):
     settings.ICC_ENROLLMENT_API_FUNCTION = "enrol_manual_enrol_users"
     settings.ICC_GET_USER_API_FUNCTION = "core_user_get_users"
     settings.ICC_CREATE_USER_API_FUNCTION = "core_user_create_users"
+    settings.ICC_LEARNER_ROLE_ID = "5"
+    settings.ICC_HASH_LENGTH = 10
 
 
