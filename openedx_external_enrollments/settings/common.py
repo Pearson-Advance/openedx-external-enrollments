@@ -61,6 +61,8 @@ def plugin_settings(settings):
     settings.SALESFORCE_API_USERNAME = "salesforce-username"
     settings.SALESFORCE_API_PASSWORD = "salesforce-password"
     settings.SALESFORCE_ENABLE_AUTHENTICATION = False
+    settings.SALESFORCE_ENROLLMENT_BASIC_AUTH_USER= ""
+    settings.SALESFORCE_ENROLLMENT_BASIC_AUTH_PASSWORD= ""
     settings.SALESFORCE_INSTANCE_URL =  "https://api-us-c.pgi.pearsondev.tech"
     settings.SALESFORCE_ENROLLMENT_API_PATH = "pa-edx/lead"
     settings.DROPBOX_API_ARG_DOWNLOAD = '{"path":"%s"}'

@@ -46,6 +46,14 @@ def plugin_settings(settings):
         'SALESFORCE_ENABLE_AUTHENTICATION',
         settings.SALESFORCE_ENABLE_AUTHENTICATION
     )
+    settings.SALESFORCE_ENROLLMENT_BASIC_AUTH_USER = getattr(settings, 'ENV_TOKENS', {}).get(
+        'SALESFORCE_ENROLLMENT_BASIC_AUTH_USER',
+        settings.SALESFORCE_ENROLLMENT_BASIC_AUTH_USER
+    )
+    settings.SALESFORCE_ENROLLMENT_BASIC_AUTH_PASSWORD = getattr(settings, 'ENV_TOKENS', {}).get(
+        'SALESFORCE_ENROLLMENT_BASIC_AUTH_PASSWORD',
+        settings.SALESFORCE_ENROLLMENT_BASIC_AUTH_PASSWORD
+    )
     settings.SALESFORCE_INSTANCE_URL = getattr(settings, 'ENV_TOKENS', {}).get(
         'SALESFORCE_INSTANCE_URL',
         settings.SALESFORCE_INSTANCE_URL
