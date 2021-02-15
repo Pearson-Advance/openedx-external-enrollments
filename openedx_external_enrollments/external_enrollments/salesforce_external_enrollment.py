@@ -1,5 +1,6 @@
 """SalesforceEnrollment class file."""
 import datetime
+import requests
 
 from urllib.parse import urlsplit, parse_qs
 from django.conf import settings
