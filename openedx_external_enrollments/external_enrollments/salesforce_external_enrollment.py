@@ -6,6 +6,7 @@ from django.conf import settings
 from oauthlib.oauth2 import BackendApplicationClient
 from opaque_keys.edx.keys import CourseKey
 from requests_oauthlib import OAuth2Session
+from requests.auth import HTTPBasicAuth
 
 from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_course_by_id
 from openedx_external_enrollments.edxapp_wrapper.get_student import CourseEnrollment, get_user
@@ -20,6 +21,24 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
     def __str__(self):
         return "salesforce"
+
+    def _execute_post(self, url, data=None, headers=None, json_data=None):
+        """
+        Execute post request.
+        """
+        basic_auth = HTTPBasicAuth(
+            settings.SALESFORCE_ENROLLMENT_BASIC_AUTH_USER,
+            settings.SALESFORCE_ENROLLMENT_BASIC_AUTH_PASSWORD
+        )
+
+        response = requests.post(
+            url=url,
+            data=data,
+            headers=headers,
+            json=json_data,
+            auth=basic_auth
+        )
+        return response
 
     @staticmethod
     def _decode_utm_params(utm_params):
