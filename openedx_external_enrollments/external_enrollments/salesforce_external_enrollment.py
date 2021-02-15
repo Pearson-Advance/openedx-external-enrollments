@@ -1,6 +1,7 @@
 """SalesforceEnrollment class file."""
 import datetime
 
+from urllib.parse import urlsplit, parse_qs
 from django.conf import settings
 from oauthlib.oauth2 import BackendApplicationClient
 from opaque_keys.edx.keys import CourseKey
@@ -19,6 +20,11 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
     def __str__(self):
         return "salesforce"
+
+    @staticmethod
+    def _decode_utm_params(utm_params):
+        utm_params_dict = {key: value[0] for key, value in parse_qs(urlsplit(utm_params).path).items()}
+        return utm_params_dict
 
     @staticmethod
     def _get_course_key(course_id):
@@ -153,15 +159,17 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                     request_time.strftime("%Y-%m-%d-%H:%M:%S"),
                 )
 
+            utm_params = _decode_utm_params(data.get("utm_params", ""))
+
             program_of_interest["Lead_Source"] = program_of_interest.get(
                 "Lead_Source",
-                None
+                ""
             )
             program_of_interest["UTM_Parameters"] = data.get(
-                "utm_source",
-                program_of_interest.get("UTM_Parameters", ""),
+                "utm_params",
+                ""
             )
-            program_of_interest["Secondary_Source"] = data.get(
+            program_of_interest["Secondary_Source"] = utm_params.get(
                 "utm_campaign",
                 program_of_interest.get("Secondary_Source", ""),
             )
@@ -247,7 +255,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             "Email",
             "Institution_Hidden",
             "Program_of_Interest",
-            "utm_params",
+            "UTM_Parameters",
             "Secondary_Source",
             "Drupal_ID",
             "Order_Number",
