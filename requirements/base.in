@@ -4,8 +4,9 @@
 celery
 Django
 djangorestframework==3.9.4
-edx-opaque-keys
+edx-opaque-keys==2.1.0
 jsonfield2
 oauthlib
 requests-oauthlib
 requests
+xmltodict
