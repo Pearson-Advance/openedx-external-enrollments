@@ -20,22 +20,17 @@ Django<2.3
 
 # Keep same platform version
 djangorestframework==3.9.4
+jsonfield2<3.1.0
+oauthlib==3.0.1
+pip-tools<5.0.0
+edx-opaque-keys==2.1.0
 
 # 5.0.0 dropped support for Python 3.5
 isort<5.0.0
 
-# Keep same platform version
-jsonfield2<3.1.0
-
 # Apply same platform constraint
 # mock version 4.0.0 drops support for python 3.5
 mock<4.0.0
-
-# Keep same platform version
-oauthlib==3.0.1
-
-# Keep same platform version
-pip-tools<5.0.0
 
 # stevedore 2.0.0 requires python >= 3.6
 stevedore<2.0.0
