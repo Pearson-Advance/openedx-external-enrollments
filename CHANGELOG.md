@@ -1,3 +1,8 @@
+### Version 2.4.0 - Feb 24, 2021
+**Changes:**
+
+  - Supporting ICC integration.
+
 ### Version 2.3.0 - Oct 29, 2020
 **Changes:**
 
