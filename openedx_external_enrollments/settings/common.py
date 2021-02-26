@@ -77,3 +77,4 @@ def plugin_settings(settings):
     settings.ICC_CREATE_USER_API_FUNCTION = "core_user_create_users"
     settings.ICC_LEARNER_ROLE_ID = "5"
     settings.ICC_HASH_LENGTH = 10
+    settings.ICC_AUTH_METHOD = "saml2"

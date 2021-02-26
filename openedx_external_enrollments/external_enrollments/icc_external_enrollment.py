@@ -105,7 +105,7 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
                 details=log_details,
             )
         else:
-            icc_user = self._get_icc_user_from_xml_response(response, log_details, 'get_user')
+            icc_user = self._get_icc_user_from_xml_response(response, 'get_user')
             icc_user = self._validate_icc_user(data, icc_user)
 
         return icc_user
@@ -132,7 +132,10 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
                 'users[0][firstname]': user.first_name,
                 'users[0][lastname]': user.last_name,
                 'users[0][email]': user.email,
-                'users[0][auth]': 'saml2',
+                'users[0][auth]': configuration_helpers.get_value(
+                    'ICC_AUTH_METHOD_OVERRIDE',
+                    settings.ICC_AUTH_METHOD,
+                ),
             }
 
             response = requests.post(
@@ -150,7 +153,7 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
                 details=log_details,
             )
         else:
-            icc_user = self._get_icc_user_from_xml_response(response, log_details, 'create_user')
+            icc_user = self._get_icc_user_from_xml_response(response, 'create_user')
 
         return icc_user
 
@@ -168,7 +171,7 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
 
         return icc_user
 
-    def _get_icc_user_from_xml_response(self, response, log_details, method_type):
+    def _get_icc_user_from_xml_response(self, response, method_type):
         """
         Method that receives a xml response and convert it to json object and returns it.
         """
@@ -189,12 +192,9 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
         except (TypeError, KeyError):
             LOG.warning('User was not found. Proceeding to create it.')
         except Exception as error:  # pylint: disable=broad-except
-            exception_message = response['EXCEPTION']['MESSAGE'] if response.get('EXCEPTION') else error
-            log_details['response'] = {
-                'error': ('Failed to retrieve ICC user from response. Reason: %s' % exception_message),
-            }
-
-            LOG.error('Failed to retrieve ICC user from response. Reason: %s', exception_message)
+            LOG.error('Failed to retrieve ICC user from response. Reason: %s',
+                      response['EXCEPTION']['MESSAGE'] if response.get('EXCEPTION') else error
+            )
 
         return icc_user
 
