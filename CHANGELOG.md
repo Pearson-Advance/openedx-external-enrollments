@@ -1,3 +1,8 @@
+### Version 2.5.1 - Feb 25, 2021
+**Changes:**
+
+  - Uppercase username bug solved.
+
 ### Version 2.5.0 - Feb 24, 2021
 **Changes:**
 

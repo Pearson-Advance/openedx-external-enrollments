@@ -105,7 +105,7 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
                 details=log_details,
             )
         else:
-            icc_user = self._get_icc_user_from_xml_response(response, 'get_user')
+            icc_user = self._get_icc_user_from_xml_response(response, log_details, 'get_user')
             icc_user = self._validate_icc_user(data, icc_user)
 
         return icc_user
@@ -122,11 +122,12 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
 
         try:
             user, _ = get_user(email=data.get('user_email'))
+            username = user.username.lower()
             request_data = {
                 'wstoken': settings.ICC_API_TOKEN,
                 'wsfunction': settings.ICC_CREATE_USER_API_FUNCTION,
-                'users[0][username]': user.username + self._get_random_string(
-                    self.USERNAME_SUFFIX_LENGTH) if duplicated_username else user.username,
+                'users[0][username]': username + self._get_random_string(
+                    self.USERNAME_SUFFIX_LENGTH) if duplicated_username else username,
                 'users[0][password]': self._get_random_string(settings.ICC_HASH_LENGTH),
                 'users[0][firstname]': user.first_name,
                 'users[0][lastname]': user.last_name,
@@ -149,7 +150,7 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
                 details=log_details,
             )
         else:
-            icc_user = self._get_icc_user_from_xml_response(response, 'create_user')
+            icc_user = self._get_icc_user_from_xml_response(response, log_details, 'create_user')
 
         return icc_user
 
@@ -167,7 +168,7 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
 
         return icc_user
 
-    def _get_icc_user_from_xml_response(self, response, method_type):
+    def _get_icc_user_from_xml_response(self, response, log_details, method_type):
         """
         Method that receives a xml response and convert it to json object and returns it.
         """
@@ -185,8 +186,15 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
                 if field.get('@name') == 'username':
                     icc_user['username'] = field.get('VALUE')
                     break
-        except Exception:  # pylint: disable=broad-except
-            pass
+        except (TypeError, KeyError):
+            LOG.warning('User was not found. Proceeding to create it.')
+        except Exception as error:  # pylint: disable=broad-except
+            exception_message = response['EXCEPTION']['MESSAGE'] if response.get('EXCEPTION') else error
+            log_details['response'] = {
+                'error': ('Failed to retrieve ICC user from response. Reason: %s' % exception_message),
+            }
+
+            LOG.error('Failed to retrieve ICC user from response. Reason: %s', exception_message)
 
         return icc_user
 
