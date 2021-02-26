@@ -4,4 +4,4 @@ Init module for openedx_external_enrollments.
 
 from __future__ import unicode_literals
 
-__version__ = '2.5.0'
+__version__ = '2.5.1'
