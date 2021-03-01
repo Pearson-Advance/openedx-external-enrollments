@@ -1,3 +1,8 @@
+### Version 2.5.2 - Mar 1, 2021
+**Changes:**
+
+  - Add site configuration flag to override ICC Authentication method.
+
 ### Version 2.5.1 - Feb 25, 2021
 **Changes:**
 
