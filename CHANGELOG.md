@@ -1,3 +1,8 @@
+### Version 2.6.0 - Mar 18, 2021
+**Changes:**
+
+  - Copy 'Other Course Settings' into LMS DB.
+
 ### Version 2.5.2 - Mar 1, 2021
 **Changes:**
 
