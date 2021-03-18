@@ -5,10 +5,10 @@ import datetime
 
 import pytz
 from opaque_keys.edx.keys import CourseKey
+from submissions import api as submissions_api  # pylint: disable=import-error
 
 from courseware.courses import get_course_by_id  # pylint: disable=import-error
 from student.models import CourseEnrollment, anonymous_id_for_user  # pylint: disable=import-error
-from submissions import api as submissions_api  # pylint: disable=import-error
 
 DAYS_IN_WEEK = 7
 

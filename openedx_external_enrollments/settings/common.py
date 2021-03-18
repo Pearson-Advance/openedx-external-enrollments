@@ -16,13 +16,11 @@ from __future__ import unicode_literals
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'secret-key'
 
-
 # Application definition
 
 INSTALLED_APPS = []
 
 ROOT_URLCONF = 'openedx_external_enrollments.urls'
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
@@ -43,6 +41,7 @@ def plugin_settings(settings):
     settings.OEE_EDX_REST_FRAMEWORK_EXTENSIONS = \
         'openedx_external_enrollments.edxapp_wrapper.backends.edx_rest_framework_extensions_i_v1'
     settings.OEE_OPENEDX_PERMISSIONS = 'openedx_external_enrollments.edxapp_wrapper.backends.openedx_permissions_i_v1'
+    settings.OEE_OPENEDX_AUTH = 'openedx_external_enrollments.edxapp_wrapper.backends.openedx_authentication_j_v1'
     settings.OEE_COURSE_HOME_MODULE = 'openedx_external_enrollments.edxapp_wrapper.backends.course_home_i_v1'
     settings.OEE_COURSE_HOME_CALCULATOR = \
         'openedx_external_enrollments.edxapp_wrapper.get_course_home.calculate_course_home'
@@ -78,3 +77,6 @@ def plugin_settings(settings):
     settings.ICC_LEARNER_ROLE_ID = "5"
     settings.ICC_HASH_LENGTH = 10
     settings.ICC_AUTH_METHOD = "saml2"
+    settings.OEE_COURSE_SETTINGS_MODULE = "openedx_external_enrollments.edxapp_wrapper.backends.course_settings_j_v1"
+    settings.OEE_UPDATE_COURSE_SETTINGS = \
+        "openedx_external_enrollments.edxapp_wrapper.get_course_settings.update_course_settings"

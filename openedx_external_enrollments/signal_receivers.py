@@ -7,10 +7,7 @@ from course_modes.models import CourseMode
 from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_course_by_id
 from openedx_external_enrollments.edxapp_wrapper.get_site_configuration import configuration_helpers
 from openedx_external_enrollments.external_enrollments import execute_external_enrollment
-from student.signals import (
-    ENROLLMENT_TRACK_UPDATED,
-    UNENROLL_DONE,
-)
+from student.signals import ENROLLMENT_TRACK_UPDATED, UNENROLL_DONE
 
 LOG = logging.getLogger(__name__)
 
@@ -29,7 +26,7 @@ def update_external_enrollment(sender, **kwargs):  # pylint: disable=unused-argu
 
     if kwargs['course_enrollment'].mode == CourseMode.VERIFIED:
         LOG.info(
-        'The event %s has been triggered for course [%s] and user [%s]. Calling external enrollment controller...',
+            'The event %s has been triggered for course [%s] and user [%s]. Calling external enrollment controller...',
             'Enroll' if kwargs['course_enrollment'].is_active else 'Unenroll',
             kwargs['course_enrollment'].course_id,
             kwargs['course_enrollment'].user.email,
