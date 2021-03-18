@@ -46,14 +46,13 @@ class OtherCourseSettings(models.Model):
     """
     Model to persist other course settings.
     """
-
     course_overview = models.OneToOneField(
         CourseOverview,
         on_delete=models.CASCADE,
         primary_key=True,
     )
-    external_course_id = models.CharField(max_length=50, null=False, blank=True)
-    external_platform = models.CharField(max_length=20, null=False, blank=True)
+    external_course_id = models.CharField(max_length=255, null=False, blank=True)
+    external_platform = models.CharField(max_length=255, null=False, blank=True)
 
     class Meta(object):
         """

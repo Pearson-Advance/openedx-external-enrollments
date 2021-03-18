@@ -7,8 +7,8 @@ from django.http import JsonResponse
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
 from rest_framework.views import APIView
-from openedx.core.lib.api.authentication import OAuth2Authentication
 
+from openedx_external_enrollments.edxapp_wrapper.get_openedx_authentication import get_oauth2_authentication
 from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_course_by_id
 from openedx_external_enrollments.edxapp_wrapper.get_edx_rest_framework_extensions import get_jwt_authentication
 from openedx_external_enrollments.edxapp_wrapper.get_openedx_permissions import get_api_key_permission
@@ -26,7 +26,7 @@ class ExternalEnrollment(APIView):
 
     authentication_classes = [
         get_jwt_authentication(),
-        OAuth2Authentication,
+        get_oauth2_authentication(),
     ]
     permission_classes = [
         get_api_key_permission(),
@@ -85,7 +85,7 @@ class SalesforceEnrollmentView(APIView):
 
     authentication_classes = [
         get_jwt_authentication(),
-        OAuth2Authentication,
+        get_oauth2_authentication(),
     ]
     permission_classes = [
         get_api_key_permission(),

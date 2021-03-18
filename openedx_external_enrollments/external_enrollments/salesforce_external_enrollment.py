@@ -1,13 +1,13 @@
 """SalesforceEnrollment class file."""
 import datetime
-import requests
+from urllib.parse import parse_qs, urlsplit
 
-from urllib.parse import urlsplit, parse_qs
+import requests
 from django.conf import settings
 from oauthlib.oauth2 import BackendApplicationClient
 from opaque_keys.edx.keys import CourseKey
-from requests_oauthlib import OAuth2Session
 from requests.auth import HTTPBasicAuth
+from requests_oauthlib import OAuth2Session
 
 from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_course_by_id
 from openedx_external_enrollments.edxapp_wrapper.get_student import CourseEnrollment, get_user
