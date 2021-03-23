@@ -70,6 +70,9 @@ setup(
         "lms.djangoapp": [
             'openedx_external_enrollments = openedx_external_enrollments.apps:OpenedxExternalEnrollmentConfig',
         ],
+        "cms.djangoapp": [
+            'openedx_external_enrollments = openedx_external_enrollments.apps:OpenedxExternalEnrollmentConfig',
+        ],
     },
     include_package_data=True,
     install_requires=load_requirements('requirements/base.in')
