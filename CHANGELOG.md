@@ -1,3 +1,8 @@
+### Version 2.7.0 - Mar 31, 2021
+**Changes:**
+
+  - Changes to OtherCourseSettings model and adds an entrypoint from cms.
+
 ### Version 2.6.0 - Mar 18, 2021
 **Changes:**
 
