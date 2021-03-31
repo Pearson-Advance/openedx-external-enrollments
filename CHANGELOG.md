@@ -1,3 +1,8 @@
+### Version 2.8.0 - Mar 31, 2021
+**Changes:**
+
+  - Adds OtherCourseSettings model to Django admin panel and replaces single to double quotes in print statements.
+
 ### Version 2.7.0 - Mar 31, 2021
 **Changes:**
 
