@@ -58,15 +58,15 @@ def migrate_course_settings(*args, **kwargs):  # pylint: disable=unused-argument
 
             # Sleeps in every group_length reach to avoid database from crashing.
             if group_counter % kwargs.get('group_length') == 0:
-                print('Waiting for %s seconds...' % kwargs.get('delay_seconds'))
+                print("Waiting for %s seconds..." % kwargs.get('delay_seconds'))
                 time.sleep(kwargs.get('delay_seconds'))
 
-        print('=' * 80)
-        print('=' * 30 + '> Migration group')
-        print('Total number of courses migrated or updated: %s\n' % len(migrated_courses))
-        print('\n'.join(migrated_courses))
-        print('=' * 80)
+        print("=" * 80)
+        print("=" * 30 + "> Migration group")
+        print("Total number of courses migrated or updated: %s\n" % len(migrated_courses))
+        print("\n".join(migrated_courses))
+        print("=" * 80)
     except Exception as error:  # pylint: disable=broad-except
-        print('=' * 80)
-        print('This command should be run via cms. Example:\'python manage.py cms migrate_other_course_settings 5 6\'.')
-        print('ERROR: %s' % error)
+        print("=" * 80)
+        print("This command should be run via cms. Example: python manage.py cms migrate_other_course_settings 5 6.")
+        print("ERROR: %s" % error)
