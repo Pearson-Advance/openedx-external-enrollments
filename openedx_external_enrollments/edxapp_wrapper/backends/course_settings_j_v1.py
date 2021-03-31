@@ -3,7 +3,6 @@ import logging
 import time
 
 from cms.djangoapps.models.settings.course_metadata import CourseMetadata
-from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx_external_enrollments.models import OtherCourseSettings
 from xmodule.modulestore.django import modulestore
 
@@ -19,10 +18,11 @@ def update_course_settings(*args, **kwargs):  # pylint: disable=unused-argument
         other_course_settings = kwargs.get('other_course_settings', {})
 
         OtherCourseSettings.objects.update_or_create(
-            course_overview=CourseOverview.get_from_id(kwargs.get('course_key')),
+            course_id=kwargs.get('course_key'),
             defaults={
-                'external_course_id': other_course_settings.get('external_course_run_id', ''),
-                'external_platform': other_course_settings.get('external_platform_target', ''),
+                'external_course_id': other_course_settings.get('external_course_run_id'),
+                'external_platform': other_course_settings.get('external_platform_target'),
+                'other_course_settings': other_course_settings,
             },
         )
     except Exception as error:  # pylint: disable=broad-except
@@ -42,17 +42,17 @@ def migrate_course_settings(*args, **kwargs):  # pylint: disable=unused-argument
 
         for course in modulestore().get_courses():
             group_counter += 1
-            course_overview = CourseOverview.get_from_id(course.id)
             other_course_settings = CourseMetadata.fetch(course).get('other_course_settings', {}).get('value', {})
 
             # Only save or update courses that have other_course_settings configurations.
             if other_course_settings and other_course_settings.get('external_course_run_id'):
-                migrated_courses.append(str(course_overview.id))
+                migrated_courses.append(str(course.id))
                 OtherCourseSettings.objects.update_or_create(
-                    course_overview=course_overview,
+                    course_id=course.id,
                     defaults={
-                        'external_course_id': other_course_settings.get('external_course_run_id', ''),
-                        'external_platform': other_course_settings.get('external_platform_target', ''),
+                        'external_course_id': other_course_settings.get('external_course_run_id'),
+                        'external_platform': other_course_settings.get('external_platform_target'),
+                        'other_course_settings': other_course_settings,
                     },
                 )
 
