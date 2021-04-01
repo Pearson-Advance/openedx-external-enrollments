@@ -18,6 +18,7 @@ INSTALLED_APPS += ['openedx_external_enrollments']
 OEE_COURSEWARE_BACKEND = 'openedx_external_enrollments.tests.tests_backends'
 OEE_EDX_REST_FRAMEWORK_EXTENSIONS = 'openedx_external_enrollments.tests.tests_backends'
 OEE_OPENEDX_PERMISSIONS = 'openedx_external_enrollments.tests.tests_backends'
+OEE_OPENEDX_AUTH = 'openedx_external_enrollments.tests.tests_backends'
 OEE_SITE_CONFIGURATION_BACKEND = 'openedx_external_enrollments.tests.tests_backends'
 OEE_STUDENT_BACKEND = 'openedx_external_enrollments.tests.tests_backends'
 
