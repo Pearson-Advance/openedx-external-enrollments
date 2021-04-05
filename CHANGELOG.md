@@ -1,3 +1,10 @@
+### Version 2.8.1 - Apr 05, 2021
+**Changes:**
+
+  - Fix Other course settings migrations files in order to unblock tests running.
+
+More info: https://github.com/Pearson-Advance/openedx-external-enrollments/pull/19
+
 ### Version 2.8.0 - Mar 31, 2021
 **Changes:**
 
