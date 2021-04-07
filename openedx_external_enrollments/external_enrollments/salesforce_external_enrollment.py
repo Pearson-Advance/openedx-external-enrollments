@@ -171,9 +171,12 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                     request_time.strftime("%Y/%m/%d-%H:%M:%S"),
                 )
             else:
-                single_course = order_lines[0]
-                course = self._get_course(single_course.get("course_id"))
-                program_of_interest = course.other_course_settings.get("salesforce_data")
+                for line in order_lines:
+                    course = self._get_course(line.get("course_id"))
+                    program_of_interest = course.other_course_settings.get("salesforce_data")
+                    if program_of_interest:
+                        break
+
                 program_of_interest["Drupal_ID"] = "enrollment+course+{}+{}".format(
                     openedx_user.username,
                     request_time.strftime("%Y-%m-%d-%H:%M:%S"),
