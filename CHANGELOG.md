@@ -1,3 +1,8 @@
+### Version 2.8.2 - Apr 07, 2021
+**Changes:**
+
+  - Check for all courses in the basket to get related salesforce data.
+
 ### Version 2.8.1 - Apr 05, 2021
 **Changes:**
 
