@@ -56,6 +56,7 @@ class OtherCourseSettings(models.Model):
         Model meta class.
         """
         app_label = "openedx_external_enrollments"
+        verbose_name_plural = "Other course settings"
 
     def __str__(self):
         return str(self.course_id)
