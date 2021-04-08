@@ -1,3 +1,8 @@
+### Version 2.8.3 - Apr 08, 2021
+**Changes:**
+
+  - Fix bug on Salesforce enrollment and Other course settings module name.
+
 ### Version 2.8.2 - Apr 07, 2021
 **Changes:**
 
