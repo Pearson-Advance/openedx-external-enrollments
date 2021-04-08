@@ -1,3 +1,8 @@
+### Version 2.8.4 - Apr 08, 2021
+**Changes:**
+
+  - Adds MIT Horizon Integration
+
 ### Version 2.8.3 - Apr 08, 2021
 **Changes:**
 
