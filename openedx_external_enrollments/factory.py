@@ -11,6 +11,9 @@ from openedx_external_enrollments.external_enrollments.greenfig_external_enrollm
     GreenfigInstanceExternalEnrollment,
 )
 from openedx_external_enrollments.external_enrollments.icc_external_enrollment import ICCExternalEnrollment
+from openedx_external_enrollments.external_enrollments.mit_hz_external_enrollment import (
+    MITHzInstanceExternalEnrollment,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -31,6 +34,8 @@ class ExternalEnrollmentFactory(object):
             return EdxEnterpriseExternalEnrollment()
         elif controller.lower() == 'icc':
             return ICCExternalEnrollment()
+        elif controller.lower() == 'mit_hz':
+            return MITHzInstanceExternalEnrollment()
         else:
             LOG.error(
                 'The external enrollment controller [%s] is not available',
