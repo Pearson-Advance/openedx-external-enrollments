@@ -1,3 +1,8 @@
+### Version 2.8.5 - Apr 09, 2021
+**Changes:**
+
+  - Change Other course settings Django admin module to read-only. 
+
 ### Version 2.8.4 - Apr 08, 2021
 **Changes:**
 
