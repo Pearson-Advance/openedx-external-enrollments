@@ -18,6 +18,7 @@ clean: ## delete most git-ignored files
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
+	coverage erase
 
 requirements: ## install environment requirements
 	pip install -r requirements/base.txt

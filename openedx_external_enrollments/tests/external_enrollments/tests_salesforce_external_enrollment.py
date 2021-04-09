@@ -96,13 +96,17 @@ class SalesforceEnrollmentTest(TestCase):
         }
         profile_mock = Mock()
         profile_mock.name = 'Peter Parker'
+        user_mock = Mock()
+        user_mock.first_name = 'Peter'
+        user_mock.last_name = 'Parker'
+        profile_mock.user = user_mock
         get_user_mock.return_value = (Mock(), profile_mock)
 
-        self.assertEqual(expected_user, self.base._get_openedx_user(data))  # pylint: disable=protected-access
+        self.assertEqual(self.base._get_openedx_user(data), expected_user)  # pylint: disable=protected-access
         get_user_mock.assert_called_once_with(email='test-email')
 
         get_user_mock.side_effect = Exception('test')
-        self.assertEqual({}, self.base._get_openedx_user(data))  # pylint: disable=protected-access
+        self.assertEqual(self.base._get_openedx_user(data), {})  # pylint: disable=protected-access
 
     @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
     def test_get_salesforce_data(self, get_program_mock):
@@ -112,6 +116,7 @@ class SalesforceEnrollmentTest(TestCase):
             'program': False,
             'paid_amount': 100,
             'currency': 'USD',
+            'number': '123',
         }
 
         self.assertEqual({}, self.base._get_salesforce_data(data))  # pylint: disable=protected-access
@@ -121,6 +126,7 @@ class SalesforceEnrollmentTest(TestCase):
         ]
         expected_data = {
             'Purchase_Type': 'Course',
+            'Order_Number': '123',
             'PaymentAmount': 100,
             'Amount_Currency': 'USD',
         }
@@ -162,10 +168,14 @@ class SalesforceEnrollmentTest(TestCase):
         expected_data = {
             'Lead_Source': 'Open edX API',
             'Secondary_Source': '',
-            'Tertiary_Source': '',
+            'UTM_Parameters': '',
         }
         course_mock = Mock()
-        course_mock.other_course_settings = {'salesforce_data': {}}
+        course_mock.other_course_settings = {
+            'salesforce_data': {
+                'Lead_Source': 'Open edX API',
+            },
+        }
         get_course_mock.return_value = course_mock
         user_mock = Mock()
         user_mock.username = 'Spiderman'
@@ -186,7 +196,6 @@ class SalesforceEnrollmentTest(TestCase):
         salesforce_data = {
             'Lead_Source': 'test-lead',
             'Secondary_Source': 'test-secondary',
-            'Tertiary_Source': 'test-tertiary',
         }
         expected_data.update(salesforce_data)
         course_mock.other_course_settings = {'salesforce_data': salesforce_data}
@@ -197,7 +206,6 @@ class SalesforceEnrollmentTest(TestCase):
 
         data['program'] = {'uuid': 'test-uuid'}
         data['utm_source'] = 'test-source'
-        expected_data['Lead_Source'] = data['utm_source']
         expected_drupal = 'enrollment+program+{}+{}'.format(
             user_mock.username,
             datetime.utcnow().strftime('%Y/%m/%d-%H:%M'),
@@ -213,8 +221,9 @@ class SalesforceEnrollmentTest(TestCase):
 
     @patch.object(SalesforceEnrollment, '_get_salesforce_course_id')
     @patch.object(SalesforceEnrollment, '_get_course_start_date')
+    @patch.object(SalesforceEnrollment, '_get_course_key')
     @patch.object(SalesforceEnrollment, '_get_course')
-    def test_get_courses_data(self, get_course_mock, get_date_mock, get_salesforce_mock):
+    def test_get_courses_data(self, get_course_mock, get_course_key_mock, get_date_mock, get_salesforce_mock):
         """Testing _get_courses_data method."""
         self.assertEqual([], self.base._get_courses_data({}, []))  # pylint: disable=protected-access
 
@@ -225,18 +234,21 @@ class SalesforceEnrollmentTest(TestCase):
             },
         ]
         now = datetime.now()
+        now_date_format = now.strftime('%Y-%m-%d')
         course_mock = Mock()
         course_mock.end = now
         course_mock.display_name = 'test-course'
         course_mock.other_course_settings = {'salesforce_data': {}}
         get_course_mock.return_value = course_mock
-        get_date_mock.return_value = now
+        get_course_key_mock.return_value = CourseKey.from_string('course-v1:PX+test-course-run-id+2015')
+        get_date_mock.return_value = now_date_format
         get_salesforce_mock.return_value = 'test-salesforce'
         expected_data = {
             'CourseName': course_mock.display_name,
-            'CourseCode': 'test-salesforce',
-            'CourseStartDate': now,
-            'CourseEndDate': now.strftime('%Y-%m-%d'),
+            'CourseID': 'PX+test-course-run-id',
+            'CourseRunID': 'test-salesforce',
+            'CourseStartDate': now_date_format,
+            'CourseEndDate': now_date_format,
             'CourseDuration': '0',
         }
 
@@ -343,7 +355,7 @@ class SalesforceEnrollmentTest(TestCase):
         salesforce_data = {
             'Lead_Source': 'test-source',
             'Secondary_Source': '',
-            'Tertiary_Source': '',
+            'UTM_Parameters': '',
         }
         course_data = {
             'CourseName': 'test-course-name',

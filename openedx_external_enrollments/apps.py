@@ -55,6 +55,5 @@ class OpenedxExternalEnrollmentConfig(AppConfig):
         The line below allows tasks defined in this app to be included by celery workers.
         https://docs.djangoproject.com/en/1.8/ref/applications/#methods
         """
-        from openedx_external_enrollments.api.v0.views import (  # pylint: disable=unused-variable
-            generate_salesforce_enrollment,
-        )
+        # pylint: disable=import-outside-toplevel, unused-import
+        from openedx_external_enrollments.api.v0.views import generate_salesforce_enrollment

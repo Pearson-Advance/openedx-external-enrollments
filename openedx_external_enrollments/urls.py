@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 
-urlpatterns = [  # pylint: disable=invalid-name
+urlpatterns = [
     url(
         r'^api/',
         include('openedx_external_enrollments.api.urls'),

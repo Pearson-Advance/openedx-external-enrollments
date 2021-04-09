@@ -137,12 +137,11 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
                     settings.ICC_AUTH_METHOD,
                 ),
             }
-
+            log_details['request_payload'] = request_data
             response = requests.post(
                 url=settings.ICC_BASE_URL,
                 data=request_data,
             )
-            log_details['request_payload'] = request_data
         except Exception as error:  # pylint: disable=broad-except
             log_details['request_payload']['wstoken'] = 'icc-api-token'
             log_details['response'] = {'error': 'Failed to create ICC user. Reason: %s' % str(error)}
@@ -177,7 +176,6 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
         """
         icc_user = {}
         OBJECT_POSITION = 0
-
         try:
             response = xmltodict.parse(response.content)
             fields = (response['RESPONSE']['MULTIPLE']['SINGLE']['KEY'] if method_type == 'create_user' else
@@ -192,8 +190,9 @@ class ICCExternalEnrollment(BaseExternalEnrollment):
         except (TypeError, KeyError):
             LOG.warning('User was not found. Proceeding to create it.')
         except Exception as error:  # pylint: disable=broad-except
-            LOG.error('Failed to retrieve ICC user from response. Reason: %s',
-                      response['EXCEPTION']['MESSAGE'] if response.get('EXCEPTION') else error
+            LOG.error(
+                'Failed to retrieve ICC user from response. Reason: %s',
+                response['EXCEPTION']['MESSAGE'] if response.get('EXCEPTION') else error
             )
 
         return icc_user

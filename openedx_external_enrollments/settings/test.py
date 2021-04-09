@@ -16,6 +16,7 @@ DATABASES = {
 INSTALLED_APPS += ['openedx_external_enrollments']
 
 OEE_COURSEWARE_BACKEND = 'openedx_external_enrollments.tests.tests_backends'
+OEE_COURSE_BACKEND = 'openedx_external_enrollments.tests.tests_backends'
 OEE_EDX_REST_FRAMEWORK_EXTENSIONS = 'openedx_external_enrollments.tests.tests_backends'
 OEE_OPENEDX_PERMISSIONS = 'openedx_external_enrollments.tests.tests_backends'
 OEE_OPENEDX_AUTH = 'openedx_external_enrollments.tests.tests_backends'
@@ -35,6 +36,8 @@ SALESFORCE_API_PASSWORD = 'salesforce-test-password'
 SALESFORCE_API_USERNAME = 'salesforce-test-username'
 SALESFORCE_API_TOKEN_URL = 'salesforce-test-api-token'
 SALESFORCE_ENROLLMENT_API_PATH = 'salesforce-enrollment-api-path'
+SALESFORCE_INSTANCE_URL = "salesforce-instance-url"
+SALESFORCE_ENABLE_AUTHENTICATION = True
 
 DROPBOX_API_ARG_DOWNLOAD = '%s-download'
 DROPBOX_API_DOWNLOAD_URL = 'dropbox-tets-api-download-url'
@@ -48,3 +51,11 @@ MIT_HZ_GET_USER_PATH = '/partner_api/pearson/user?user_id='
 MIT_HZ_REFRESH_URL = '/partner_api/pearson/refresh_user'
 MIT_HZ_ID = 'login-id'
 MIT_HZ_SECRET = 'secret-key'
+
+ICC_CREATE_USER_API_FUNCTION = 'icc-create-user-api-function'
+ICC_ENROLLMENT_API_FUNCTION = 'icc-enrollment-api-function'
+ICC_API_TOKEN = 'icc-api-token'
+ICC_LEARNER_ROLE_ID = '5'
+ICC_BASE_URL = "icc-base-url"
+ICC_HASH_LENGTH = 10
+ICC_AUTH_METHOD = "test-auth-method"

@@ -18,7 +18,7 @@ class GreenfigInstanceExternalEnrollmentTest(TestCase):
         self.base = GreenfigInstanceExternalEnrollment()
 
     @patch('openedx_external_enrollments.external_enrollments.greenfig_external_enrollment.get_user')
-    @patch('openedx_external_enrollments.external_enrollments.greenfig_external_enrollment.GreenfigInstanceExternalEnrollment._get_course_list')  # noqa pylint: disable=line-too-long
+    @patch('openedx_external_enrollments.external_enrollments.greenfig_external_enrollment.GreenfigInstanceExternalEnrollment._get_course_list')  # noqa pylint: disable=I0021, C0301
     @patch('openedx_external_enrollments.external_enrollments.greenfig_external_enrollment.datetime')
     def test_get_enrollment_data(self, datetime_now_mock, _get_course_list_mock, get_user_mock):
         """Test _get_enrollment_data method."""

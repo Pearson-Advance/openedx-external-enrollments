@@ -3,7 +3,6 @@ Model module
 """
 from django.db import models
 from jsonfield.fields import JSONField
-
 from opaque_keys.edx.django.models import CourseKeyField
 
 
@@ -15,7 +14,7 @@ class ProgramSalesforceEnrollment(models.Model):
     bundle_id = models.CharField(max_length=48, unique=True)
     meta = JSONField(null=False, blank=True)
 
-    class Meta(object):
+    class Meta:
         """
         Model meta class.
         """
@@ -35,7 +34,7 @@ class EnrollmentRequestLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta(object):
+    class Meta:
         """
         Model meta class.
         """
@@ -51,7 +50,7 @@ class OtherCourseSettings(models.Model):
     external_platform = models.CharField(max_length=255, null=True, blank=True)
     other_course_settings = JSONField(null=True, blank=True)
 
-    class Meta(object):
+    class Meta:
         """
         Model meta class.
         """

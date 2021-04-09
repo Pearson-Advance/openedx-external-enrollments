@@ -3,17 +3,20 @@ import logging
 
 from django.dispatch import receiver
 
-from course_modes.models import CourseMode
+from openedx_external_enrollments.edxapp_wrapper.get_course_mode import get_course_mode
 from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_course_by_id
 from openedx_external_enrollments.edxapp_wrapper.get_site_configuration import configuration_helpers
+from openedx_external_enrollments.edxapp_wrapper.get_student import (
+    get_enrollment_track_updated_signal,
+    get_unenroll_done_signal,
+)
 from openedx_external_enrollments.external_enrollments import execute_external_enrollment
-from student.signals import ENROLLMENT_TRACK_UPDATED, UNENROLL_DONE
 
 LOG = logging.getLogger(__name__)
 
 
-@receiver(ENROLLMENT_TRACK_UPDATED)
-@receiver(UNENROLL_DONE)
+@receiver(get_enrollment_track_updated_signal())
+@receiver(get_unenroll_done_signal())
 def update_external_enrollment(sender, **kwargs):  # pylint: disable=unused-argument
     """
     This receiver is attached to enrollment/unenrollments events. It applies
@@ -24,7 +27,7 @@ def update_external_enrollment(sender, **kwargs):  # pylint: disable=unused-argu
     if not configuration_helpers.get_value('ENABLE_EXTERNAL_ENROLLMENTS', False):
         return
 
-    if kwargs['course_enrollment'].mode == CourseMode.VERIFIED:
+    if kwargs['course_enrollment'].mode == get_course_mode().VERIFIED:
         LOG.info(
             'The event %s has been triggered for course [%s] and user [%s]. Calling external enrollment controller...',
             'Enroll' if kwargs['course_enrollment'].is_active else 'Unenroll',

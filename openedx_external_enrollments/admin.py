@@ -3,7 +3,7 @@ Django admin page
 """
 from django.contrib import admin
 
-from openedx_external_enrollments.models import EnrollmentRequestLog, ProgramSalesforceEnrollment, OtherCourseSettings
+from openedx_external_enrollments.models import EnrollmentRequestLog, OtherCourseSettings, ProgramSalesforceEnrollment
 
 
 class ReadOnlyAdminMixin:
@@ -24,6 +24,7 @@ class ReadOnlyAdminMixin:
         return False
 
 
+@admin.register(ProgramSalesforceEnrollment)
 class ProgramSalesforceEnrollmentAdmin(admin.ModelAdmin):
     """
     Program salesforce enrollment model admin.
@@ -35,6 +36,7 @@ class ProgramSalesforceEnrollmentAdmin(admin.ModelAdmin):
     search_fields = ('bundle_id', 'meta',)
 
 
+@admin.register(EnrollmentRequestLog)
 class EnrollmentRequestLogAdmin(admin.ModelAdmin):
     """
     Enrollment request model admin.
@@ -48,6 +50,7 @@ class EnrollmentRequestLogAdmin(admin.ModelAdmin):
     search_fields = ('request_type', 'details',)
 
 
+@admin.register(OtherCourseSettings)
 class OtherCourseSettingsAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     """
     OtherCourseSettings model admin.
@@ -59,8 +62,3 @@ class OtherCourseSettingsAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     ]
 
     search_fields = ('course_id', 'external_course_id',)
-
-
-admin.site.register(EnrollmentRequestLog, EnrollmentRequestLogAdmin)
-admin.site.register(ProgramSalesforceEnrollment, ProgramSalesforceEnrollmentAdmin)
-admin.site.register(OtherCourseSettings, OtherCourseSettingsAdmin)

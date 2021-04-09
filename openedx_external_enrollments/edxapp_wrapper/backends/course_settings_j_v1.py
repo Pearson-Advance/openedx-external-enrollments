@@ -2,9 +2,10 @@
 import logging
 import time
 
-from cms.djangoapps.models.settings.course_metadata import CourseMetadata
+from cms.djangoapps.models.settings.course_metadata import CourseMetadata  # pylint: disable=import-error
+from xmodule.modulestore.django import modulestore  # pylint: disable=import-error
+
 from openedx_external_enrollments.models import OtherCourseSettings
-from xmodule.modulestore.django import modulestore
 
 LOG = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ def update_course_settings(*args, **kwargs):  # pylint: disable=unused-argument
     try:
         other_course_settings = kwargs.get('other_course_settings', {})
 
-        OtherCourseSettings.objects.update_or_create(
+        OtherCourseSettings.objects.update_or_create(  # pylint: disable=no-member
             course_id=kwargs.get('course_key'),
             defaults={
                 'external_course_id': other_course_settings.get('external_course_run_id'),
@@ -47,7 +48,7 @@ def migrate_course_settings(*args, **kwargs):  # pylint: disable=unused-argument
             # Only save or update courses that have other_course_settings configurations.
             if other_course_settings and other_course_settings.get('external_course_run_id'):
                 migrated_courses.append(str(course.id))
-                OtherCourseSettings.objects.update_or_create(
+                OtherCourseSettings.objects.update_or_create(  # pylint: disable=no-member
                     course_id=course.id,
                     defaults={
                         'external_course_id': other_course_settings.get('external_course_run_id'),
