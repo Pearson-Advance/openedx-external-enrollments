@@ -1,7 +1,12 @@
+### Version 2.8.6 - Apr 09, 2021
+**Changes:**
+
+  - Set a default value for MIT_HZ_API_URL. 
+
 ### Version 2.8.5 - Apr 09, 2021
 **Changes:**
 
-  - Change Other course settings Django admin module to read-only. 
+  - Change Other course settings Django admin module to read-only.
 
 ### Version 2.8.4 - Apr 08, 2021
 **Changes:**
