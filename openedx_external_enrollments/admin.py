@@ -6,6 +6,24 @@ from django.contrib import admin
 from openedx_external_enrollments.models import EnrollmentRequestLog, ProgramSalesforceEnrollment, OtherCourseSettings
 
 
+class ReadOnlyAdminMixin:
+    """
+    Mixin class to make a model read only on Django admin.
+    """
+
+    def has_add_permission(self, request):  # pylint: disable=unused-argument
+        """Method that handles add permissions."""
+        return False
+
+    def has_change_permission(self, request, obj=None):  # pylint: disable=unused-argument
+        """Method that handles change permissions."""
+        return False
+
+    def has_delete_permission(self, request, obj=None):  # pylint: disable=unused-argument
+        """Method that handles delete permissions."""
+        return False
+
+
 class ProgramSalesforceEnrollmentAdmin(admin.ModelAdmin):
     """
     Program salesforce enrollment model admin.
@@ -30,7 +48,7 @@ class EnrollmentRequestLogAdmin(admin.ModelAdmin):
     search_fields = ('request_type', 'details',)
 
 
-class OtherCourseSettingsAdmin(admin.ModelAdmin):
+class OtherCourseSettingsAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     """
     OtherCourseSettings model admin.
     """
