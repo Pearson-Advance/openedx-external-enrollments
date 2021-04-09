@@ -80,7 +80,7 @@ def plugin_settings(settings):
     settings.OEE_COURSE_SETTINGS_MODULE = "openedx_external_enrollments.edxapp_wrapper.backends.course_settings_j_v1"
     settings.OEE_UPDATE_COURSE_SETTINGS = \
         "openedx_external_enrollments.edxapp_wrapper.get_course_settings.update_course_settings"
-    settings.MIT_HZ_API_URL = "mit-horizon-api-url"
+    settings.MIT_HZ_API_URL = "https://mit-horizon-staging.herokuapp.com"
     settings.MIT_HZ_LOGIN_PATH = "/partner_api/login"
     settings.MIT_HZ_GET_USER_PATH = "/partner_api/pearson/user?user_id="
     settings.MIT_HZ_REFRESH_URL = "/partner_api/pearson/refresh_user"
