@@ -1,7 +1,12 @@
+### Version 2.8.6 - Apr 12, 2021
+**Changes:**
+
+  - Fix MIT Horizon TypeError
+
 ### Version 2.8.6 - Apr 09, 2021
 **Changes:**
 
-  - Set a default value for MIT_HZ_API_URL. 
+  - Set a default value for MIT_HZ_API_URL.
 
 ### Version 2.8.5 - Apr 09, 2021
 **Changes:**
