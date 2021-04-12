@@ -61,7 +61,7 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
             )
         else:
             if not response.ok:
-                log_details['response'] = response.text()
+                log_details['response'] = response.text
                 EnrollmentRequestLog.objects.create(
                     request_type=str(self),
                     details=log_details,
@@ -70,6 +70,7 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
                 return 'missing token'
 
             return response.json()['access_token']
+        return 'missing token'
 
     def _get_enrollment_headers(self):
         """
@@ -107,7 +108,7 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
             return str(error), status.HTTP_500_INTERNAL_SERVER_ERROR
         else:
             if not response.ok:
-                log_details['response'] = response.text()
+                log_details['response'] = response.text
                 LOG.error('User not found at MIT HZ API.')
                 EnrollmentRequestLog.objects.create(
                     request_type=str(self),
