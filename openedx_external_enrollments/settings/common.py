@@ -38,6 +38,7 @@ def plugin_settings(settings):
     More info: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst
     """
     settings.OEE_COURSEWARE_BACKEND = 'openedx_external_enrollments.edxapp_wrapper.backends.courseware_i_v1'
+    settings.OEE_COURSE_BACKEND = 'openedx_external_enrollments.edxapp_wrapper.backends.course_module_j_v1'
     settings.OEE_EDX_REST_FRAMEWORK_EXTENSIONS = \
         'openedx_external_enrollments.edxapp_wrapper.backends.edx_rest_framework_extensions_i_v1'
     settings.OEE_OPENEDX_PERMISSIONS = 'openedx_external_enrollments.edxapp_wrapper.backends.openedx_permissions_i_v1'

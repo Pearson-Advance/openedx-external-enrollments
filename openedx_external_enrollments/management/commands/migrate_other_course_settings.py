@@ -39,7 +39,7 @@ class Command(BaseCommand):
             default=self.DEFAULT_GROUP_LENGTH,
         )
 
-    def handle(self, *args, **options):  # pylint: disable=unused-argument
+    def handle(self, *args, **options):
         """
         Execute the command.
         This function calls migrate_course_settings from backends.

@@ -3,8 +3,9 @@
 -c constraints.txt
 -r base.txt
 
+coverage
+ddt
+mock
 pycodestyle
 pylint
-coverage
-mock
 testfixtures

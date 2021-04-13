@@ -186,11 +186,11 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
             program_of_interest["Lead_Source"] = program_of_interest.get(
                 "Lead_Source",
-                ""
+                "",
             )
             program_of_interest["UTM_Parameters"] = data.get(
                 "utm_params",
-                ""
+                "",
             )
             program_of_interest["Secondary_Source"] = utm_params.get(
                 "utm_campaign",

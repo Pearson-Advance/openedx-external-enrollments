@@ -9,7 +9,6 @@ workflows:
   test:
     jobs:
       - test-3.6
-      - test-2.7
 jobs:
   test-3.6:
     docker:
@@ -39,40 +38,6 @@ jobs:
           paths:
             - ./venv
           key: v1-dependencies-{{ checksum "requirements/test.txt" }}
-
-      - run:
-          name: Run tests
-          command: |
-            . venv/bin/activate
-            make validate_python
-
-  # Based on answer https://discuss.circleci.com/t/run-tests-on-multiple-versions-of-python/15462
-  test-2.7:
-    docker:
-      - image: circleci/python:2.7
-    working_directory: ~/repo27
-
-    steps:
-      - checkout
-
-      # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-27-dependencies-{{ checksum "requirements/test.txt" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-27-dependencies-
-
-      - run:
-          name: activate virtualenv and install dependencies.
-          command: |
-            test -d venv || virtualenv ./venv
-            . venv/bin/activate
-            pip install -r requirements/test.txt
-
-      - save_cache:
-          paths:
-            - ./venv
-          key: v1-27-dependencies-{{ checksum "requirements/test.txt" }}
 
       - run:
           name: Run tests

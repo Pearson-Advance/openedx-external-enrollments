@@ -9,7 +9,7 @@ from openedx_external_enrollments.models import EnrollmentRequestLog
 LOG = logging.getLogger(__name__)
 
 
-class BaseExternalEnrollment(object):
+class BaseExternalEnrollment():
     """
     Base class for all the enrollments.
     """
@@ -74,7 +74,7 @@ class BaseExternalEnrollment(object):
 
         try:
             json_response = response.json()
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             pass
 
         return json_response

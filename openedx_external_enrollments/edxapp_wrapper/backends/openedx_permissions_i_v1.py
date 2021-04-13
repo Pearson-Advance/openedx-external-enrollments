@@ -1,5 +1,3 @@
 """ Backend abstraction """
-from openedx.core.lib.api.permissions import (  # pylint: disable=unused-import, import-error
-    ApiKeyHeaderPermissionIsAuthenticated,
-    IsStaffOrOwner,
-)
+# pylint: disable=unused-import, import-error
+from openedx.core.lib.api.permissions import ApiKeyHeaderPermissionIsAuthenticated, IsStaffOrOwner

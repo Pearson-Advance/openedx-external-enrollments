@@ -22,3 +22,19 @@ def get_course_enrollment():
 
 
 CourseEnrollment = get_course_enrollment()
+
+
+def get_enrollment_track_updated_signal():
+    """Returns enrollment_track_updated signal result method.."""
+    backend_module = settings.OEE_STUDENT_BACKEND
+    backend = import_module(backend_module)
+
+    return backend.get_enrollment_track_updated_signal()
+
+
+def get_unenroll_done_signal():
+    """Returns unenroll_done signal result method.."""
+    backend_module = settings.OEE_STUDENT_BACKEND
+    backend = import_module(backend_module)
+
+    return backend.get_unenroll_done_signal()

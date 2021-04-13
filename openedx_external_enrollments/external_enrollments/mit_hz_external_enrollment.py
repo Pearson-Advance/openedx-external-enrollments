@@ -1,3 +1,4 @@
+"""MITHzInstanceExternalEnrollment class file."""
 import logging
 from urllib.parse import quote_plus
 
@@ -51,18 +52,18 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
                 url=url,
                 json=data,
             )
-        except Exception as error:
+        except Exception as error:  # pylint: disable=broad-except
             msg_error = 'Failed to authenticate at MIT HZ API. Reason: %s' % str(error)
             log_details['response'] = {'error': msg_error}
             LOG.error(msg_error)
-            EnrollmentRequestLog.objects.create(
+            EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
                 request_type=str(self),
                 details=log_details,
             )
         else:
             if not response.ok:
                 log_details['response'] = response.text
-                EnrollmentRequestLog.objects.create(
+                EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
                     request_type=str(self),
                     details=log_details,
                 )
@@ -98,10 +99,10 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
 
         try:
             response = requests.get(url, headers=headers)
-        except Exception as error:
+        except Exception as error:  # pylint: disable=broad-except
             LOG.error('Failed to get user at MIT HZ API.')
             log_details['response'] = {'error': 'Failed to get user at MIT HZ API. Reason: %s' % str(error)}
-            EnrollmentRequestLog.objects.create(
+            EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
                 request_type=str(self),
                 details=log_details,
             )
@@ -110,7 +111,7 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
             if not response.ok:
                 log_details['response'] = response.text
                 LOG.error('User not found at MIT HZ API.')
-                EnrollmentRequestLog.objects.create(
+                EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
                     request_type=str(self),
                     details=log_details,
                 )
@@ -118,7 +119,7 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
 
             log_details['response'] = response.json()
             log_details['message'] = 'User found'
-            EnrollmentRequestLog.objects.create(
+            EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
                 request_type=str(self),
                 details=log_details,
             )
