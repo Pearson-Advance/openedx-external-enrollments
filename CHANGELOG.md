@@ -1,3 +1,8 @@
+### Version 3.0.0 - Apr 13, 2021
+**Changes:**
+
+  - Fix plugin tests and remove support for python27.
+
 ### Version 2.8.6 - Apr 12, 2021
 **Changes:**
 
