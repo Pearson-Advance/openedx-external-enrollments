@@ -48,7 +48,7 @@ DROPBOX_DATE_FORMAT = '%m-%d-%Y %H:%M:%S'
 MIT_HZ_API_URL = 'root-url'
 MIT_HZ_LOGIN_PATH = '/partner_api/login'
 MIT_HZ_GET_USER_PATH = '/partner_api/pearson/user?user_id='
-MIT_HZ_REFRESH_URL = '/partner_api/pearson/refresh_user'
+MIT_HZ_REFRESH_PATH = '/partner_api/pearson/refresh_user'
 MIT_HZ_ID = 'login-id'
 MIT_HZ_SECRET = 'secret-key'
 

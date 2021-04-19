@@ -140,7 +140,7 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
         """Format the url to refresh a user."""
         return '{root_url}{path}'.format(
             root_url=settings.MIT_HZ_API_URL,
-            path=settings.MIT_HZ_REFRESH_URL,
+            path=settings.MIT_HZ_REFRESH_PATH,
         )
 
     def _get_user_id(self, email):
