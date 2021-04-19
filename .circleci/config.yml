@@ -1,46 +1,50 @@
-# Python CircleCI 2.0 configuration file
+# Python CircleCI 2.1 configuration file
 #
 # Check https://circleci.com/docs/2.0/language-python/ for more details
 #
 
-version: 2
+version: 2.1
 workflows:
-  version: 2
+  version: 2.1
   test:
     jobs:
-      - test-3.6
+      - test:
+          matrix:
+            parameters:
+              python_version: ["3.5", "3.8"]
 jobs:
-  test-3.6:
+  test:
+    parameters:
+      python_version:
+        type: string
+    working_directory: ~/repo<< parameters.python_version >>
     docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.6.5
-    working_directory: ~/repo
-
+      - image: 'circleci/python:<< parameters.python_version >>'
     steps:
       - checkout
-
-      # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "requirements/test.txt" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-
+          - v2-dependencies-{{ checksum "requirements/test.txt" }}
       - run:
-          name: activate virtualenv and install dependencies.
+          name: Activating virtualenv and installing dependencies.
           command: |
             test -d venv || virtualenv -p python3 ./venv
             . venv/bin/activate
-            pip install -r requirements/test.txt
+            make install-dev-dependencies
 
       - save_cache:
           paths:
+            - ./.tox
             - ./venv
-          key: v1-dependencies-{{ checksum "requirements/test.txt" }}
+          key: v2-dependencies-{{ checksum "requirements/test.txt" }}
 
       - run:
-          name: Run tests
+          name: Run Python tests and quality tests.
           command: |
             . venv/bin/activate
-            make validate_python
+            export TOX_ENV=$PY_ENV
+            export TOXENV=${TOX_ENV//./}
+            make run-tests
+
+    environment:
+      - PY_ENV: py<< parameters.python_version >>
