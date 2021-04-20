@@ -1,3 +1,8 @@
+### Version 3.1.0 - Apr 20, 2021
+**Changes:**
+
+  - Add tox setup to test py35 and py38.
+
 ### Version 3.0.0 - Apr 13, 2021
 **Changes:**
 
