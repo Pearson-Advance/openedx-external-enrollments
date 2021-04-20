@@ -24,6 +24,7 @@ jsonfield2<3.1.0
 oauthlib==3.0.1
 pip-tools<5.0.0
 edx-opaque-keys==2.1.0
+astroid==2.3.3
 
 # 5.0.0 dropped support for Python 3.5
 isort<5.0.0
@@ -34,3 +35,7 @@ mock<4.0.0
 
 # stevedore 2.0.0 requires python >= 3.6
 stevedore<2.0.0
+
+# Quality constraints:
+pylint==2.4.2
+

@@ -6,6 +6,4 @@
 coverage
 ddt
 mock
-pycodestyle
-pylint
 testfixtures
