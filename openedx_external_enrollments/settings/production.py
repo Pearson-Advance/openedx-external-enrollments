@@ -114,3 +114,27 @@ def plugin_settings(settings):
         'ICC_HASH_LENGTH',
         settings.ICC_HASH_LENGTH,
     )
+    settings.MIT_HZ_API_URL = getattr(settings, 'ENV_TOKENS', {}).get(
+        'MIT_HZ_API_URL',
+        settings.MIT_HZ_API_URL,
+    )
+    settings.MIT_HZ_LOGIN_PATH = getattr(settings, 'ENV_TOKENS', {}).get(
+        'MIT_HZ_LOGIN_PATH',
+        settings.MIT_HZ_LOGIN_PATH,
+    )
+    settings.MIT_HZ_REFRESH_PATH = getattr(settings, 'ENV_TOKENS', {}).get(
+        'MIT_HZ_REFRESH_PATH',
+        settings.MIT_HZ_REFRESH_PATH,
+    )
+    settings.MIT_HZ_GET_USER_PATH = getattr(settings, 'ENV_TOKENS', {}).get(
+        'MIT_HZ_GET_USER_PATH',
+        settings.MIT_HZ_GET_USER_PATH,
+    )
+    settings.MIT_HZ_ID = getattr(settings, 'ENV_TOKENS', {}).get(
+        'MIT_HZ_ID',
+        settings.MIT_HZ_ID,
+    )
+    settings.MIT_HZ_SECRET = getattr(settings, 'ENV_TOKENS', {}).get(
+        'MIT_HZ_SECRET',
+        settings.MIT_HZ_SECRET,
+    )

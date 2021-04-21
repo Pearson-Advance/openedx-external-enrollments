@@ -84,6 +84,6 @@ def plugin_settings(settings):
     settings.MIT_HZ_API_URL = "https://mit-horizon-staging.herokuapp.com"
     settings.MIT_HZ_LOGIN_PATH = "/partner_api/login"
     settings.MIT_HZ_GET_USER_PATH = "/partner_api/pearson/user?user_id="
-    settings.MIT_HZ_REFRESH_URL = "/partner_api/pearson/refresh_user"
+    settings.MIT_HZ_REFRESH_PATH = "/partner_api/pearson/refresh_user"
     settings.MIT_HZ_ID = "mit-hz-id"
     settings.MIT_HZ_SECRET = "mit-hz-secret"
