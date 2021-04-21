@@ -1,3 +1,8 @@
+### Version 3.1.1 - Apr 21, 2021
+**Changes:**
+
+  - Add MIT Horizon prod settings
+
 ### Version 3.1.0 - Apr 20, 2021
 **Changes:**
 
