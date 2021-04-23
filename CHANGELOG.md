@@ -1,3 +1,8 @@
+### Version 3.2.0 - Apr 23, 2021
+**Changes:**
+
+  - Replace CircleCI with GitHub Actions
+
 ### Version 3.1.1 - Apr 21, 2021
 **Changes:**
 
