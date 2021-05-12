@@ -182,8 +182,6 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                     request_time.strftime("%Y-%m-%d-%H:%M:%S"),
                 )
 
-            utm_params = self._decode_utm_params(data.get("utm_params", ""))
-
             program_of_interest["Lead_Source"] = program_of_interest.get(
                 "Lead_Source",
                 "",
@@ -192,9 +190,9 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 "utm_params",
                 "",
             )
-            program_of_interest["Secondary_Source"] = utm_params.get(
-                "utm_campaign",
-                program_of_interest.get("Secondary_Source", ""),
+            program_of_interest["Secondary_Source"] = program_of_interest.get(
+                "Secondary_Source",
+                ""
             )
         except Exception:  # pylint: disable=broad-except
             pass
