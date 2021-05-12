@@ -1,3 +1,7 @@
+### Version 3.2.1 - May 12, 2021
+**Changes:**
+
+  - Removing relation between UTM params and source fields.
 ### Version 3.2.0 - Apr 23, 2021
 **Changes:**
 
