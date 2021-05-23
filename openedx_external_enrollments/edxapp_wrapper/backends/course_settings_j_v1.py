@@ -18,14 +18,18 @@ def update_course_settings(*args, **kwargs):  # pylint: disable=unused-argument
     try:
         other_course_settings = kwargs.get('other_course_settings', {})
 
-        OtherCourseSettings.objects.update_or_create(  # pylint: disable=no-member
-            course_id=kwargs.get('course_key'),
-            defaults={
-                'external_course_id': other_course_settings.get('external_course_run_id'),
-                'external_platform': other_course_settings.get('external_platform_target'),
-                'other_course_settings': other_course_settings,
-            },
-        )
+        if other_course_settings and other_course_settings.get('external_platform_target'):
+            OtherCourseSettings.objects.update_or_create(  # pylint: disable=no-member
+                course_id=kwargs.get('course_key'),
+                defaults={
+                    'external_course_id': other_course_settings.get('external_course_run_id'),
+                    'external_platform': other_course_settings.get('external_platform_target'),
+                    'other_course_settings': other_course_settings,
+                },
+            )
+        else:
+            OtherCourseSettings.objects.filter(course_id=kwargs.get('course_key')).delete()  # pylint: disable=no-member
+
     except Exception as error:  # pylint: disable=broad-except
         LOG.error('Failed to update course_settings in the backend. Reason: %s', str(error))
 
@@ -46,7 +50,7 @@ def migrate_course_settings(*args, **kwargs):  # pylint: disable=unused-argument
             other_course_settings = CourseMetadata.fetch(course).get('other_course_settings', {}).get('value', {})
 
             # Only save or update courses that have other_course_settings configurations.
-            if other_course_settings and other_course_settings.get('external_course_run_id'):
+            if other_course_settings and other_course_settings.get('external_platform_target'):
                 migrated_courses.append(str(course.id))
                 OtherCourseSettings.objects.update_or_create(  # pylint: disable=no-member
                     course_id=course.id,
