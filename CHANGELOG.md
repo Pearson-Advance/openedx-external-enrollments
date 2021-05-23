@@ -1,3 +1,7 @@
+### Version 3.3.0 - May 23, 2021
+**Changes:**
+
+  - Change condition to migrate and update courses in OtherCourseSettings table.
 ### Version 3.2.1 - May 12, 2021
 **Changes:**
 
