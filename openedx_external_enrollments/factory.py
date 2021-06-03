@@ -12,6 +12,7 @@ from openedx_external_enrollments.external_enrollments.greenfig_external_enrollm
 )
 from openedx_external_enrollments.external_enrollments.icc_external_enrollment import ICCExternalEnrollment
 from openedx_external_enrollments.external_enrollments.mit_hz_external_enrollment import MITHzInstanceExternalEnrollment
+from openedx_external_enrollments.external_enrollments.pathstream_external_enrollment import PathstreamExternalEnrollment
 
 LOG = logging.getLogger(__name__)
 
@@ -34,6 +35,8 @@ class ExternalEnrollmentFactory():
             return ICCExternalEnrollment()
         elif controller.lower() == 'mit_hz':
             return MITHzInstanceExternalEnrollment()
+        elif controller.lower() == 'pathstream':
+            return PathstreamExternalEnrollment()
         else:
             LOG.error(
                 'The external enrollment controller [%s] is not available',
