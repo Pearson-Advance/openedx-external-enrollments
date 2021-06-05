@@ -2,12 +2,13 @@
 import logging
 
 import datetime as dt
+
+from requests.models import Response
 import boto3
 from botocore.exceptions import ClientError
 
 
 from openedx_external_enrollments.edxapp_wrapper.get_site_configuration import configuration_helpers
-from openedx_external_enrollments.external_enrollments.base_external_enrollment import BaseExternalEnrollment
 from openedx_external_enrollments.models import EnrollmentRequestLog
 
 LOG = logging.getLogger(__name__)
@@ -16,27 +17,20 @@ LOG = logging.getLogger(__name__)
 class PathstreamExternalEnrollment():
     """
     PathstreamExternalEnrollment class.
+    Using Kinesis Data Firehose
     """
 
     def __init__(self):
-        self.s3 = boto3.client('s3')
-        self.S3_BUCKET = configuration_helpers.get_value('S3_BUCKET', 'remoteloggerpathstream')
-        self.S3_FILE = configuration_helpers.get_value('S3_FILE', 'pathstream_external_enrollments.log')
+        self.client = boto3.client('firehose')
+        self.STREAM_NAME= configuration_helpers.get_value('STREAM_NAME', 'path')
 
     def __str__(self):
         return 'pathstream'
 
     def _get_enrollment_data(self, data, course_settings):
         """
-        Returns data required to be treated as a log.
-
-        arguments:
-            data
-            course_settings
-
-        returns:
-            string format
-            Open edX Course Key, Email, Date/time, Status
+        Returns a string with the data required to be treated as a log.
+        string format: 'course_key, email, date_time, status'
         """
         time_zone = dt.timezone.utc
         date_time = dt.datetime.now(time_zone) #.strftime(%Y-%m-%d)
@@ -49,44 +43,47 @@ class PathstreamExternalEnrollment():
         )
         return enrollment_data
 
-    def _download_file(self):
-        """Download the file from an S3 Bucket"""
-        self.s3.download_file(
-            self.S3_BUCKET,
-            self.S3_FILE,
-            self.S3_FILE
+    def _write_enrollment_data(self, enrollment_data):
+        """Write the enrollment data into the firehose delivery stream.
+        """
+        response = self.client.put_record(
+            DeliveryStreamName=self.STREAM_NAME,
+            Record={
+                'Data': bytes(enrollment_data, 'utf-8')
+            }
         )
 
-    def _update_file(self, data):
-        """Append enrollment data to the downloaded S3 file"""
-        with open(self.S3_FILE, 'a') as f:
-            f.write(data+'\n')
+        return response
 
-    def _upload_file(self):
-        """Upload the file to an S3 bucket
+        """ Exceptions to keep in mind
+        Firehose.Client.exceptions.ResourceNotFoundException
+        Firehose.Client.exceptions.InvalidArgumentException
+        Firehose.Client.exceptions.InvalidKMSResourceException
 
-        :param file_name: File to upload
-        :param bucket: Bucket to upload to
-        :return: True if file was uploaded, else False
+        # if next one, back off and retry, If the exception persists,
+        # it is possible that the throughput limits have been exceeded for the delivery stream.
+        Firehose.Client.exceptions.ServiceUnavailableException
+        LOG.error('Failed to complete enrollment. Reason: %s', str(error))
         """
 
-        try:
-            response = self.s3.upload_file(
-                self.S3_FILE,
-                self.S3_BUCKET,
-                self.S3_FILE
-            )
-        except ClientError as e:
-            # logging.error(e)
-            return False
-        return True
-
     def _post_enrollment(self, data, course_settings=None):
-
+        """
+        Get and write enrollment data.
+        """
         enrollment_data = self._get_enrollment_data(data, course_settings)
-        self._download_file()
-        self._update_file(enrollment_data)
-        self._upload_file()
+        LOG.info('calling enrollment for [%s] with data: %s', self.__str__(), enrollment_data)
+        LOG.info('calling enrollment for [%s] with stream delivery: %s', self.__str__(), self.STREAM_NAME)
+        LOG.info('calling enrollment for [%s] with course settings: %s', self.__str__(), course_settings)
+        response = self._write_enrollment_data(enrollment_data)
+        LOG.info('External enrollment response for [%s] -- %s', self.__str__(), response)
 
-
+        log_details = {
+            'response': response,
+            'stream': self.STREAM_NAME,
+            'course_advanced_settings': course_settings,
+        }
+        EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
+                request_type=str(self),
+                details=log_details,
+        )
 
