@@ -3,6 +3,7 @@ Model module
 """
 from django.db import models
 from jsonfield.fields import JSONField
+from opaque_keys.edx.django.models import CourseKeyField
 
 from openedx_external_enrollments.edxapp_wrapper.course_module import get_course_overview
 
@@ -27,7 +28,7 @@ class ProgramSalesforceEnrollment(models.Model):
 
 class EnrollmentRequestLog(models.Model):
     """
-    Model to persist enrollment requests
+    Model to persist enrollment requests.
     """
 
     request_type = models.CharField(max_length=10)
@@ -60,3 +61,29 @@ class OtherCourseSettings(models.Model):
 
     def __str__(self):
         return str(self.course)
+
+
+class ExternalEnrollment(models.Model):
+    """
+    Model to persist external enrollments.
+    This model is thought for special cases where enrollments have invitation links for example and this will
+    help to retrieve the course URL when the learner will try to access the course content.
+
+    Fields:
+        meta: stores the relevant data from the enrollment. e.g:
+            {
+                'course_id': 'external-course-id',
+                'class_id': 'external-class-id',
+                'course_url': 'external-course-launch-target',
+            }
+    """
+    controller_name = models.CharField(max_length=50)
+    course_shell_id = CourseKeyField(max_length=255)
+    email = models.EmailField()
+    meta = JSONField(null=False, blank=True)
+
+    class Meta:
+        """
+        Model meta class.
+        """
+        app_label = "openedx_external_enrollments"

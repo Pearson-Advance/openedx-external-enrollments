@@ -17,6 +17,7 @@ class UpdateExternalEnrollmentTest(TestCase):
         instance.is_active = True
         instance.mode = 'test-mode'
         instance.user.email = 'test-email'
+        instance.user.profile.name = 'name'
         instance.course_id = 'test-course-id'
         get_course_by_id_mock.return_value = 'test-course'
         configuration_helpers_mock.get_value.return_value = False
@@ -24,6 +25,8 @@ class UpdateExternalEnrollmentTest(TestCase):
             'user_email': instance.user.email,
             'course_mode': instance.mode,
             'is_active': True,
+            'course_id': instance.course_id,
+            'name': instance.user.profile.name,
         }
         course_mode_mock = Mock()
         course_mode_mock.VERIFIED = 'test-mode'
@@ -75,12 +78,15 @@ class DeleteExternalEnrollmentTest(TestCase):
         instance.mode = 'test-mode'
         instance.user.email = 'test-email'
         instance.course_id = 'test-course-id'
+        instance.user.profile.name = 'name'
         get_course_by_id_mock.return_value = 'test-course'
         configuration_helpers_mock.get_value.return_value = False
         data = {
             'user_email': instance.user.email,
             'course_mode': instance.mode,
             'is_active': False,
+            'course_id': instance.course_id,
+            'name': instance.user.profile.name,
         }
         course_mode_mock = Mock()
         course_mode_mock.VERIFIED = 'test-mode'
