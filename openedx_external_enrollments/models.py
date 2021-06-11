@@ -3,7 +3,8 @@ Model module
 """
 from django.db import models
 from jsonfield.fields import JSONField
-from opaque_keys.edx.django.models import CourseKeyField
+
+from openedx_external_enrollments.edxapp_wrapper.course_module import get_course_overview
 
 
 class ProgramSalesforceEnrollment(models.Model):
@@ -45,7 +46,7 @@ class OtherCourseSettings(models.Model):
     """
     Model to persist other course settings.
     """
-    course_id = CourseKeyField(db_index=True, primary_key=True, max_length=255)
+    course = models.ForeignKey(get_course_overview(), on_delete=models.CASCADE, related_name='course_settings')
     external_course_id = models.CharField(max_length=255, null=True, blank=True)
     external_platform = models.CharField(max_length=255, null=True, blank=True)
     other_course_settings = JSONField(null=True, blank=True)
@@ -58,4 +59,4 @@ class OtherCourseSettings(models.Model):
         verbose_name_plural = "Other course settings"
 
     def __str__(self):
-        return str(self.course_id)
+        return str(self.course)

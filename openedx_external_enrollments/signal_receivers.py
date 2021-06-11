@@ -3,7 +3,7 @@ import logging
 
 from django.dispatch import receiver
 
-from openedx_external_enrollments.edxapp_wrapper.get_course_mode import get_course_mode
+from openedx_external_enrollments.edxapp_wrapper.course_module import get_course_mode
 from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_course_by_id
 from openedx_external_enrollments.edxapp_wrapper.get_site_configuration import configuration_helpers
 from openedx_external_enrollments.edxapp_wrapper.get_student import (

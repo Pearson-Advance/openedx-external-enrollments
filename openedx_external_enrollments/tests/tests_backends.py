@@ -1,5 +1,10 @@
 """This file contains all the necessary backend in a test scenario."""
+from django.db import models
 from mock import Mock
+
+
+class CourseOverview(models.Model):
+    """Test model class for openedx.core.djangoapps.content.course_overviews.models."""
 
 
 class ApiKeyHeaderPermissionIsAuthenticated():
@@ -34,3 +39,8 @@ def get_enrollment_track_updated_signal():
 def get_unenroll_done_signal():
     """Test get_unenroll_done_signal method."""
     return Mock()
+
+
+def get_course_overview():
+    """Test get_course_overview method."""
+    return CourseOverview
