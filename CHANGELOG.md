@@ -1,3 +1,7 @@
+### Version 3.4.0 - June 15, 2021
+**Changes:**
+
+  - Changes OtherCourseSettings table, course_id CourseKeyField to course CourseOverview FK.
 ### Version 3.3.0 - May 23, 2021
 **Changes:**
 
