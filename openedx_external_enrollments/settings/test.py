@@ -6,6 +6,10 @@ from __future__ import unicode_literals
 
 from .common import *  # pylint: disable=wildcard-import
 
+# Disables migrations due to OtherCourseSettings table migration depends on an edx-platform migration file.
+MIGRATION_MODULES = {
+    'openedx_external_enrollments': None,
+}
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
