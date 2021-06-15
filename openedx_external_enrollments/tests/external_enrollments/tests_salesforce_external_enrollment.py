@@ -219,11 +219,10 @@ class SalesforceEnrollmentTest(TestCase):
         self.assertEqual(expected_data, program_data)
         self.assertTrue(drupal_id.startswith(expected_drupal))
 
-    @patch.object(SalesforceEnrollment, '_get_salesforce_course_id')
     @patch.object(SalesforceEnrollment, '_get_course_start_date')
     @patch.object(SalesforceEnrollment, '_get_course_key')
     @patch.object(SalesforceEnrollment, '_get_course')
-    def test_get_courses_data(self, get_course_mock, get_course_key_mock, get_date_mock, get_salesforce_mock):
+    def test_get_courses_data(self, get_course_mock, get_course_key_mock, get_date_mock):
         """Testing _get_courses_data method."""
         self.assertEqual([], self.base._get_courses_data({}, []))  # pylint: disable=protected-access
 
@@ -242,11 +241,10 @@ class SalesforceEnrollmentTest(TestCase):
         get_course_mock.return_value = course_mock
         get_course_key_mock.return_value = CourseKey.from_string('course-v1:PX+test-course-run-id+2015')
         get_date_mock.return_value = now_date_format
-        get_salesforce_mock.return_value = 'test-salesforce'
         expected_data = {
             'CourseName': course_mock.display_name,
             'CourseID': 'PX+test-course-run-id',
-            'CourseRunID': 'test-salesforce',
+            'CourseRunID': 'test-course-id',
             'CourseStartDate': now_date_format,
             'CourseEndDate': now_date_format,
             'CourseDuration': '0',
@@ -268,25 +266,6 @@ class SalesforceEnrollmentTest(TestCase):
         get_course_mock.side_effect = Exception('test-exception')
 
         self.assertEqual([], self.base._get_courses_data({}, lines))  # pylint: disable=protected-access
-
-    @patch.object(SalesforceEnrollment, '_is_external_course')
-    def test_get_salesforce_course_id(self, external_course_mock):
-        """Testing _get_salesforce_course_id method."""
-        external_course_mock.return_value = False
-        course_mock = Mock()
-        course_mock.other_course_settings = {'external_course_run_id': 'test-settings-id'}
-
-        self.assertEqual(
-            'internal-id',
-            self.base._get_salesforce_course_id(course_mock, 'internal-id'),  # pylint: disable=protected-access
-        )
-        external_course_mock.assert_called_with(course_mock)
-
-        external_course_mock.return_value = True
-        self.assertEqual(
-            'test-settings-id',
-            self.base._get_salesforce_course_id(course_mock, 'internal-id'),  # pylint: disable=protected-access
-        )
 
     def test_is_external_course(self):
         """Testing _is_external_course method."""
