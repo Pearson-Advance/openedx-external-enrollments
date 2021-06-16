@@ -216,7 +216,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_data = dict()
                 course_data["CourseName"] = salesforce_settings.get("Program_Name") or course.display_name
                 course_data["CourseID"] = "{}+{}".format(course_key.org, course_key.course)
-                course_data["CourseRunID"] = self._get_salesforce_course_id(course, course_id)
+                course_data["CourseRunID"] = course_id
                 course_data["CourseStartDate"] = self._get_course_start_date(course, line.get("user_email"), course_id)
                 course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d")
                 course_data["CourseDuration"] = "0"
@@ -226,15 +226,6 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 courses.append(course_data)
 
         return courses
-
-    def _get_salesforce_course_id(self, course, internal_id):
-        """
-        Returns either an external course id or internal.
-        """
-        if self._is_external_course(course):
-            return course.other_course_settings.get("external_course_run_id")
-
-        return internal_id
 
     @staticmethod
     def _is_external_course(course):
