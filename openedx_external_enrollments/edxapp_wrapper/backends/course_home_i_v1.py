@@ -4,14 +4,12 @@ Course home concrete module
 import datetime
 
 import pytz
-import requests
 from courseware.courses import get_course_by_id  # pylint: disable=import-error
-from django.conf import settings
 from opaque_keys.edx.keys import CourseKey
 from student.models import CourseEnrollment, anonymous_id_for_user  # pylint: disable=import-error
 from submissions import api as submissions_api  # pylint: disable=import-error
 
-from openedx_external_enrollments.models import ExternalEnrollment
+from openedx_external_enrollments.factory import ExternalEnrollmentFactory
 
 DAYS_IN_WEEK = 7
 
@@ -36,9 +34,17 @@ def calculate_course_home(course_id, user):
         return custom_entry_point
 
     if is_external_course(course_id):
-        if custom_course_settings.get('external_platform_target') == 'viper':
-            return get_viper_course_target(course_key, user)
-        return custom_course_settings.get("external_course_target")
+        enrollment_controller = ExternalEnrollmentFactory.get_enrollment_controller(
+            controller=custom_course_settings.get('external_platform_target'),
+        )
+
+        return enrollment_controller._get_course_home_url(  # pylint: disable=protected-access
+            course_settings=custom_course_settings,
+            data={
+                'course_id': course_id,
+                'user': user,
+            },
+        )
 
     return None
 
@@ -116,54 +122,3 @@ def _check_entry_point_completion(point, user, course_key, course_id):
     )
 
     return bool(submissions_api.get_submissions(student_item))
-
-
-def get_viper_course_target(course_id, user):
-    """
-    Return a valid external course target for Viper enrollments.
-    """
-    CONTROLLER_NAME = 'viper'
-
-    try:
-        enrollment = ExternalEnrollment.objects.get(  # pylint: disable=no-member
-            controller_name=CONTROLLER_NAME,
-            course_shell_id=course_id,
-            email=user.email
-        )
-    except ExternalEnrollment.DoesNotExist:  # pylint: disable=no-member
-        return None
-
-    if enrollment.meta.get('is_active') and 'invitations' not in enrollment.meta.get('course_url'):
-        return enrollment.meta.get('course_url')
-
-    # Retrieve the invitation/course url through an enrollment.
-    # This operation will happen until invitation link is replaced by the actual course enrollment target.
-    try:
-        response = requests.post(
-            url=settings.OEE_VIPER_API_URL,
-            headers={
-                'x-api-key': settings.OEE_VIPER_MUTATIONS_API_KEY,
-            },
-            json={
-                'action': 'createEnrolment',
-                'variables': {
-                    'classId': enrollment.meta.get('class_id'),
-                    'courseId': enrollment.meta.get('course_id'),
-                    'email': user.email,
-                    'name': user.profile.name,
-                    'provider': settings.OEE_VIPER_IDP,
-                },
-            },
-        )
-    except Exception:  # pylint: disable=broad-except
-        # LOG
-        course_url = None
-    else:
-        course_url = response.json().get('link')
-
-    # Update the Viper course URL in the enrollment record in order to retrieve it directly.
-    enrollment.meta['course_url'] = course_url
-    enrollment.meta['is_active'] = True
-    enrollment.save()
-
-    return course_url
