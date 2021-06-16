@@ -1,3 +1,7 @@
+### Version 3.4.1 - June 16, 2021
+**Changes:**
+
+  - Edit salesforce external enrollment to return course run key.
 ### Version 3.4.0 - June 15, 2021
 **Changes:**
 
