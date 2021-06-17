@@ -66,7 +66,7 @@ class OtherCourseSettingsAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
         'external_platform',
     ]
 
-    search_fields = ('course_id', 'external_course_id',)
+    search_fields = ('course__id', 'external_course_id', 'external_platform')
 
 
 @admin.register(ExternalEnrollment)
@@ -81,4 +81,4 @@ class ExternalEnrollmentAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
         'meta',
     ]
 
-    search_fields = ('controller_name', 'course_shell_id', 'email')
+    search_fields = ('controller_name', 'course_shell__id', 'email')

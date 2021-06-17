@@ -42,7 +42,8 @@ def calculate_course_home(course_id, user):
             course_settings=custom_course_settings,
             data={
                 'course_id': course_id,
-                'user': user,
+                'user_email': user.email,
+                'user_name': user.profile.name,
             },
         )
 

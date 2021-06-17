@@ -26,7 +26,7 @@ class UpdateExternalEnrollmentTest(TestCase):
             'course_mode': instance.mode,
             'is_active': True,
             'course_id': instance.course_id,
-            'name': instance.user.profile.name,
+            'user_name': instance.user.profile.name,
         }
         course_mode_mock = Mock()
         course_mode_mock.VERIFIED = 'test-mode'
@@ -86,7 +86,7 @@ class DeleteExternalEnrollmentTest(TestCase):
             'course_mode': instance.mode,
             'is_active': False,
             'course_id': instance.course_id,
-            'name': instance.user.profile.name,
+            'user_name': instance.user.profile.name,
         }
         course_mode_mock = Mock()
         course_mode_mock.VERIFIED = 'test-mode'

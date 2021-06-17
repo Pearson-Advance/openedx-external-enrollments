@@ -63,3 +63,7 @@ ICC_LEARNER_ROLE_ID = '5'
 ICC_BASE_URL = "icc-base-url"
 ICC_HASH_LENGTH = 10
 ICC_AUTH_METHOD = "test-auth-method"
+
+OEE_VIPER_IDP = 'okta'
+OEE_VIPER_MUTATIONS_API_KEY = 'viper-mutations-api-key'
+OEE_VIPER_API_URL = 'viper-api-url'
