@@ -1,3 +1,7 @@
+### Version 3.5.0 - June 18, 2021
+**Changes:**
+
+  - Add Viper external enrollment integration..
 ### Version 3.4.1 - June 16, 2021
 **Changes:**
 
