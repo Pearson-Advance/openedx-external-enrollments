@@ -87,3 +87,6 @@ def plugin_settings(settings):
     settings.MIT_HZ_REFRESH_PATH = "/partner_api/pearson/refresh_user"
     settings.MIT_HZ_ID = "mit-hz-id"
     settings.MIT_HZ_SECRET = "mit-hz-secret"
+    settings.OEE_VIPER_MUTATIONS_API_KEY = 'viper-mutations-api-key'
+    settings.OEE_VIPER_API_URL = 'https://vip-demo-api.virtual-academies.com/holistic'
+    settings.OEE_VIPER_IDP = 'okta'

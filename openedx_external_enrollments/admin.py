@@ -3,7 +3,12 @@ Django admin page
 """
 from django.contrib import admin
 
-from openedx_external_enrollments.models import EnrollmentRequestLog, OtherCourseSettings, ProgramSalesforceEnrollment
+from openedx_external_enrollments.models import (
+    EnrollmentRequestLog,
+    ExternalEnrollment,
+    OtherCourseSettings,
+    ProgramSalesforceEnrollment,
+)
 
 
 class ReadOnlyAdminMixin:
@@ -61,4 +66,19 @@ class OtherCourseSettingsAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
         'external_platform',
     ]
 
-    search_fields = ('course_id', 'external_course_id',)
+    search_fields = ('course__id', 'external_course_id', 'external_platform')
+
+
+@admin.register(ExternalEnrollment)
+class ExternalEnrollmentAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
+    """
+    OtherCourseSettings model admin.
+    """
+    list_display = [
+        'controller_name',
+        'course_shell_id',
+        'email',
+        'meta',
+    ]
+
+    search_fields = ('controller_name', 'course_shell__id', 'email')

@@ -90,3 +90,9 @@ class BaseExternalEnrollment():
     def _get_enrollment_url(self, course_settings):
         """Unimplemented method necessary to execute _post_enrollment."""
         raise NotImplementedError
+
+    def _get_course_home_url(self, course_settings, data=None):  # pylint: disable=unused-argument
+        """
+        Get course url home.
+        """
+        return course_settings.get("external_course_target")

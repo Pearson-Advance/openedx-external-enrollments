@@ -27,7 +27,7 @@ class ProgramSalesforceEnrollment(models.Model):
 
 class EnrollmentRequestLog(models.Model):
     """
-    Model to persist enrollment requests
+    Model to persist enrollment requests.
     """
 
     request_type = models.CharField(max_length=10)
@@ -60,3 +60,44 @@ class OtherCourseSettings(models.Model):
 
     def __str__(self):
         return str(self.course)
+
+
+class ExternalEnrollment(models.Model):
+    """
+    Model to persist external enrollments.
+    This model is thought for special cases where enrollments data need to
+    be stored and used for any purpose.
+
+    For instance:
+    - An invitation link, which will help to retrieve the the course URL when the learner
+      tries to access the course content.
+    - Save the external enrollments data in a specific format to be retrieved later by a periodic task.
+
+    Fields:
+        controller_name: Controller name.
+        course_shell: Course id from the platform course..
+        email: Email of the learner.
+        created: Datetime when the enrollment happened.
+        meta: stores relevant data from the enrollment. e.g:
+            {
+                'course_id': 'external-course-id',
+                'class_id': 'external-class-id',
+                'course_url': 'external-course-launch-target',
+                ...
+            }
+    """
+    controller_name = models.CharField(max_length=50)
+    course_shell = models.ForeignKey(
+        get_course_overview(),
+        on_delete=models.CASCADE,
+        related_name='external_course_enrollment',
+    )
+    email = models.EmailField()
+    created = models.DateTimeField(auto_now_add=True)
+    meta = JSONField(null=False, blank=True)
+
+    class Meta:
+        """
+        Model meta class.
+        """
+        app_label = "openedx_external_enrollments"

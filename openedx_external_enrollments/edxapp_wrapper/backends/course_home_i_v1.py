@@ -9,6 +9,8 @@ from opaque_keys.edx.keys import CourseKey
 from student.models import CourseEnrollment, anonymous_id_for_user  # pylint: disable=import-error
 from submissions import api as submissions_api  # pylint: disable=import-error
 
+from openedx_external_enrollments.factory import ExternalEnrollmentFactory
+
 DAYS_IN_WEEK = 7
 
 
@@ -16,7 +18,6 @@ def calculate_course_home(course_id, user):
     """
     Calculate course home.
     """
-
     course_key = CourseKey.from_string(course_id)
     user_is_enrolled = CourseEnrollment.is_enrolled(user, course_key)
 
@@ -33,7 +34,18 @@ def calculate_course_home(course_id, user):
         return custom_entry_point
 
     if is_external_course(course_id):
-        return custom_course_settings.get("external_course_target")
+        enrollment_controller = ExternalEnrollmentFactory.get_enrollment_controller(
+            controller=custom_course_settings.get('external_platform_target'),
+        )
+
+        return enrollment_controller._get_course_home_url(  # pylint: disable=protected-access
+            course_settings=custom_course_settings,
+            data={
+                'course_id': course_id,
+                'user_email': user.email,
+                'user_name': user.profile.name,
+            },
+        )
 
     return None
 
@@ -48,7 +60,7 @@ def is_external_course(course_id):
 
     return (
         custom_course_settings.get("external_course_run_id") and
-        custom_course_settings.get("external_course_target")
+        custom_course_settings.get("external_platform_target")
     )
 
 

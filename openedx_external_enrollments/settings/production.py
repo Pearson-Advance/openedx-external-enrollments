@@ -138,3 +138,15 @@ def plugin_settings(settings):
         'MIT_HZ_SECRET',
         settings.MIT_HZ_SECRET,
     )
+    settings.OEE_VIPER_MUTATIONS_API_KEY = getattr(settings, 'ENV_TOKENS', {}).get(
+        'OEE_VIPER_MUTATIONS_API_KEY',
+        settings.OEE_VIPER_MUTATIONS_API_KEY,
+    )
+    settings.OEE_VIPER_API_URL = getattr(settings, 'ENV_TOKENS', {}).get(
+        'OEE_VIPER_API_URL',
+        settings.OEE_VIPER_API_URL,
+    )
+    settings.OEE_VIPER_IDP = getattr(settings, 'ENV_TOKENS', {}).get(
+        'OEE_VIPER_IDP',
+        settings.OEE_VIPER_IDP,
+    )

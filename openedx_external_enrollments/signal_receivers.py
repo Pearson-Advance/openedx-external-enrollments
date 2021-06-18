@@ -37,6 +37,8 @@ def update_external_enrollment(sender, **kwargs):  # pylint: disable=unused-argu
 
         data = {
             'user_email': kwargs['course_enrollment'].user.email,
+            'user_name': kwargs['course_enrollment'].user.profile.name,
+            'course_id': kwargs['course_enrollment'].course_id,
             'course_mode': kwargs['course_enrollment'].mode,
             'is_active': kwargs['course_enrollment'].is_active,
         }
