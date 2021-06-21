@@ -105,7 +105,6 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
 
             with open(self.S3_FILE, 'r') as f:
                 last_line = f.readlines()[-1]
-                print('last_line-with-', last_line)
 
             if last_line == '\n':
                 LOG.info('Empty S3 file, new file')
@@ -114,14 +113,9 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
                 return False
             else:
                 last_dt_str = last_line.split(',')[2]
-                print('-----ini')
                 last_dt = dt.datetime.strptime(last_dt_str, self.TIME_FORMAT)
-                # last_dt = dt.datetime.strptime('2021-06-18 17:47:24.379828', "%Y-%m-%d %H:%M:%S.%f")
 
-                print(last_dt)
                 last_dt = make_aware(last_dt)
-                print(last_dt)
-                print('-----end')
                 return last_dt
 
         except FileNotFoundError as error:
