@@ -25,6 +25,7 @@ oauthlib==3.0.1
 pip-tools<5.0.0
 edx-opaque-keys==2.1.0
 astroid==2.3.3
+boto3==1.4.8
 
 # 5.0.0 dropped support for Python 3.5
 isort<5.0.0

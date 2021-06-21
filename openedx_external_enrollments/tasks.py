@@ -2,6 +2,11 @@
 from celery import task
 from rest_framework import status
 
+from celery import task, decorators
+
+from openedx_external_enrollments.external_enrollments.pathstream_external_enrollment import (
+    PathstreamExternalEnrollment,
+)
 from openedx_external_enrollments.external_enrollments.salesforce_external_enrollment import SalesforceEnrollment
 from openedx_external_enrollments.external_enrollments.viper_external_enrollment import ViperExternalEnrollment
 
