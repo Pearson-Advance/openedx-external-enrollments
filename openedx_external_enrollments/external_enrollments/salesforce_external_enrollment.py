@@ -137,7 +137,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         :param data:
         :return:
         """
-        LOG.info('Calling _get_salesforce_data for [%s] with data: %s',  self.__str__(), data)
+        LOG.info('Calling _get_salesforce_data for [%s] with data: %s', self.__str__(), data)
         salesforce_data = {}
         order_lines = data.get("supported_lines")
         if order_lines:
@@ -210,7 +210,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         :param order_lines:
         :return:
         """
-        LOG.info('Calling _get_courses_data for [%s] with order_lines: %s',  self.__str__(), order_lines)
+        LOG.info('Calling _get_courses_data for [%s] with order_lines: %s', self.__str__(), order_lines)
         courses = []
         for line in order_lines:
             try:
