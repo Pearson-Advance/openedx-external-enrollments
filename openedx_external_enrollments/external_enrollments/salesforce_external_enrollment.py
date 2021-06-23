@@ -17,6 +17,7 @@ from openedx_external_enrollments.models import ProgramSalesforceEnrollment
 
 LOG = logging.getLogger(__name__)
 
+
 class SalesforceEnrollment(BaseExternalEnrollment):
     """
     SalesforceEnrollment class.
