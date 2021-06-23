@@ -1,11 +1,11 @@
 """PathstreamExternalEnrollment class file."""
 import datetime as dt
 import logging
-from random import randint
 import os
 
 import boto3
 from botocore.exceptions import ClientError
+from django.conf import settings
 from django.utils.timezone import make_aware
 
 from openedx_external_enrollments.edxapp_wrapper.get_site_configuration import configuration_helpers
@@ -30,9 +30,6 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
     def __str__(self):
         return 'pathstream'
 
-    def __init__(self):
-        self.TIME_FORMAT = "%Y-%m-%d %H:%M:%S.%f"
-
     def _init_s3(self):
         """Start S3 connection and retrieve the names for both bucket and file.
         """
@@ -46,19 +43,30 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
 
     def _get_enrollment_data(self, data, course_settings):
         """
-        Returns a string with the data required to be treated as a log.
-        String format: 'course_key,email,date_time,status'
+        Returns a dict with the data required to be treated as a log.
         """
-        time_zone = dt.timezone.utc
-        date_time = dt.datetime.now(time_zone).strftime(self.TIME_FORMAT)
-
-        enrollment_data = u'{course_key},{email},{date_time},{status}\n'.format(
-            course_key=course_settings.get('external_course_run_id'),
-            email=data.get('user_email'),
-            date_time=date_time,
-            status=str(data.get('is_active')).lower(),
-        )
+        enrollment_data = {
+            'course_key':course_settings.get('external_course_run_id'),
+            'email':data.get('user_email'),
+            'status':str(data.get('is_active')).lower(),
+        }
         return enrollment_data
+
+    def _get_format_data(self, enrollment_data, created_datetime):
+        """
+        Returns the string with the enrollment data in the File Format.
+        String file format: 'course_key,email,date_time,status\\n'
+
+        Param: created_datetime (datetime)
+        """
+        date_time_str = created_datetime.strftime("%Y-%m-%d %H:%M:%S.%f")
+        formated_enrollment_data = u'{course_key},{email},{date_time},{status}\n'.format(
+            course_key=enrollment_data.get('course_key'),
+            email=enrollment_data.get('email'),
+            date_time=date_time_str,
+            status=enrollment_data.get('status'),
+        )
+        return formated_enrollment_data
 
     def _post_enrollment(self, data, course_settings=None):
         """
@@ -68,13 +76,19 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         LOG.info('calling enrollment for [%s] with data: %s', self.__str__(), enrollment_data)
         LOG.info('calling enrollment for [%s] with course settings: %s', self.__str__(), course_settings)
 
+        enrollment = EnrollmentRequestLog()
+        enrollment.request_type = str(self)
+        enrollment.save()
+
+        date_time = enrollment_data.created_at
+
+        formated_enrollment_data = self._get_format_data(enrollment_data, date_time)
+
         log_details = {
-            'enrollment_data': enrollment_data,
+            'enrollment_data': formated_enrollment_data,
             'course_advanced_settings': course_settings,
         }
 
-        enrollment = EnrollmentRequestLog()
-        enrollment.request_type = str(self)
         enrollment.details = log_details
         enrollment.save()
 
@@ -181,11 +195,12 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         if last_datetime:
             enrollments_qs = EnrollmentRequestLog.objects.filter(request_type=str(self), created_at__gt=last_datetime)
         else:
-            enrollments_qs = EnrollmentRequestLog.objects.filter(request_type=str(self))
+            enrollments_qs = EnrollmentRequestLog.objects.filter(request_type=str(self)) #flag_subido=False
 
         if enrollments_qs.count() > 0:
 
             enrollments_data = [enrollment.details['enrollment_data'] for enrollment in enrollments_qs]
+            #Flag a enrollments_qs
 
             self._update_file(enrollments_data)
 
