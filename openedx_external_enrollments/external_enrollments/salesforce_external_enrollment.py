@@ -1,5 +1,6 @@
 """SalesforceEnrollment class file."""
 import datetime
+import logging
 from urllib.parse import parse_qs, urlsplit
 
 import requests
@@ -14,6 +15,7 @@ from openedx_external_enrollments.edxapp_wrapper.get_student import CourseEnroll
 from openedx_external_enrollments.external_enrollments.base_external_enrollment import BaseExternalEnrollment
 from openedx_external_enrollments.models import ProgramSalesforceEnrollment
 
+LOG = logging.getLogger(__name__)
 
 class SalesforceEnrollment(BaseExternalEnrollment):
     """
@@ -134,6 +136,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         :param data:
         :return:
         """
+        LOG.info('Calling _get_salesforce_data for [%s] with data: %s',  self.__str__(), data)
         salesforce_data = {}
         order_lines = data.get("supported_lines")
         if order_lines:
@@ -143,8 +146,8 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 salesforce_data["Purchase_Type"] = "Program" if data.get("program") else "Course"
                 salesforce_data["PaymentAmount"] = data.get("paid_amount")
                 salesforce_data["Amount_Currency"] = data.get("currency")
-            except Exception:  # pylint: disable=broad-except
-                pass
+            except Exception as error:  # pylint: disable=broad-except
+                LOG.warning('Failed while filling salesforce_data. Reason: %s', str(error))
 
         return salesforce_data
 
@@ -206,6 +209,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         :param order_lines:
         :return:
         """
+        LOG.info('Calling _get_courses_data for [%s] with order_lines: %s',  self.__str__(), order_lines)
         courses = []
         for line in order_lines:
             try:
@@ -220,8 +224,8 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_data["CourseStartDate"] = self._get_course_start_date(course, line.get("user_email"), course_id)
                 course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d")
                 course_data["CourseDuration"] = "0"
-            except Exception:  # pylint: disable=broad-except
-                pass
+            except Exception as error:  # pylint: disable=broad-except
+                LOG.error('Failed _get_courses_data while filling course_data. Reason: %s', str(error))
             else:
                 courses.append(course_data)
 
@@ -294,6 +298,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         )
 
         unwanted = set(payload["enrollment"]) - set(valid_keys)
+        LOG.info('Unwanted keys when calling _get_enrollment_data: %s', unwanted)
         for unwanted_key in unwanted:
             del payload["enrollment"][unwanted_key]
 
