@@ -90,3 +90,7 @@ def plugin_settings(settings):
     settings.OEE_VIPER_MUTATIONS_API_KEY = 'viper-mutations-api-key'
     settings.OEE_VIPER_API_URL = 'https://vip-demo-api.virtual-academies.com/holistic'
     settings.OEE_VIPER_IDP = 'okta'
+    settings.OEE_PATHSTREAM_S3_FILE = 'pathstream_external_enrollments.log'
+    settings.OEE_PATHSTREAM_S3_BUCKET = 'remoteloggerpathstream'
+    settings.OOE_PATHSTREAM_S3_ACCESS_KEY = 'access_key'
+    settings.OOE_PATHSTREAM_S3_SECRET_KEY = 'secret_access_key'

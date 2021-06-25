@@ -4,6 +4,7 @@ import logging
 import os
 
 import boto3
+import botocore
 from botocore.exceptions import ClientError
 from django.conf import settings
 from django.utils.timezone import make_aware
@@ -15,7 +16,7 @@ from openedx_external_enrollments.models import EnrollmentRequestLog
 LOG = logging.getLogger(__name__)
 
 
-class S3NotInitialized(Exception):
+class S3NotInitialized(BaseException):
     """Exception when _init_s3 has not been initialized before calling _upload_file or _download_file """
 
 # pendings
@@ -27,19 +28,22 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
     """
     PathstreamExternalEnrollment class.
     """
+    def __init__(self):
+        self.client =  None
+        self.S3_BUCKET = settings.OEE_PATHSTREAM_S3_BUCKET
+        self.S3_FILE = settings.OEE_PATHSTREAM_S3_FILE
+
     def __str__(self):
         return 'pathstream'
 
     def _init_s3(self):
-        """Start S3 connection and retrieve the names for both bucket and file.
+        """Start S3 connection.
         """
         self.client = boto3.client(
             's3',
-            aws_access_key_id=configuration_helpers.get_value('ACCESS_KEY', 'AKIA2DFCAATKKPOO2EAS'),
-            aws_secret_access_key=configuration_helpers.get_value('SECRET_KEY', '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'),
+            aws_access_key_id=settings.OOE_PATHSTREAM_S3_ACCESS_KEY,
+            aws_secret_access_key=settings.OOE_PATHSTREAM_S3_SECRET_KEY,
         )
-        self.S3_BUCKET = configuration_helpers.get_value('S3_BUCKET', 'remoteloggerpathstream')
-        self.S3_FILE = configuration_helpers.get_value('S3_FILE', 'pathstream_external_enrollments.log')
 
     def _get_enrollment_data(self, data, course_settings):
         """
@@ -80,7 +84,7 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         enrollment.request_type = str(self)
         enrollment.save()
 
-        date_time = enrollment_data.created_at
+        date_time = enrollment.created_at
 
         formated_enrollment_data = self._get_format_data(enrollment_data, date_time)
 
@@ -94,16 +98,14 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
 
         LOG.info('Saving External enrollment object for [%s] -- EnrollmentRequestLog.id = %s', self.__str__(), enrollment.id)
 
-    def _download_file(self):
+    def _download_file(self, client):
         """Download the file from an S3 Bucket"""
-        try:
-            self.client.download_file(
-                self.S3_BUCKET,
-                self.S3_FILE,
-                self.S3_FILE
-            )
-        except AttributeError:
-            raise S3NotInitialized
+        client.download_file(
+            self.S3_BUCKET,
+            self.S3_FILE,
+            self.S3_FILE
+        )
+
 
     def _get_last_enrollment_datetime(self):
         """Returns the last EnrollmentRequestLog object's datetime stored in the S3 file.
@@ -150,7 +152,7 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         except FileNotFoundError as error:
             LOG.error('File was not downloaded or _download_file was not called.')
 
-    def _upload_file(self):
+    def _upload_file(self, client):
         """Upload the file to an S3 bucket
 
         :param file_name: File to upload
@@ -158,13 +160,11 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         """
 
         try:
-            self.client.upload_file(
+            client.upload_file(
                 self.S3_FILE,
                 self.S3_BUCKET,
                 self.S3_FILE
             )
-        except AttributeError:
-            raise S3NotInitialized
 
         except ClientError as error:
             LOG.error('Failed to upload the file to S3. Reason: %s', str(error))
@@ -179,7 +179,7 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         except FileNotFoundError:
             LOG.error('File was not downloaded or _download_file was not called.')
 
-    def _execute_upload(self):
+    def execute_upload(self):
         """
         Context: This method will download, update and upload an S3 File.
 
@@ -188,7 +188,7 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
 
         self._init_s3()
 
-        self._download_file()
+        self._download_file(self.client)
 
         last_datetime = self._get_last_enrollment_datetime()
 
@@ -209,3 +209,10 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
             LOG.info('There are no new enrollments to update the S3 file')
 
         self._delete_downloaded_file()
+
+
+# client = boto3.client(
+#     's3',
+#     aws_access_key_id= 'AKIA2DFCAATKPPFVVM6O',
+#     aws_secret_access_key='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',
+# )

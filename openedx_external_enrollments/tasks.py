@@ -39,5 +39,5 @@ def pathstream_periodic_task():
     except Exception:  # pylint: disable=broad-except
         pass
     else:
-        enrollment_controller._execute_upload() # pylint: disable=protected-access
+        enrollment_controller.execute_upload()
 
