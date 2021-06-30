@@ -7,6 +7,7 @@ from openedx_external_enrollments.models import (
     EnrollmentRequestLog,
     ExternalEnrollment,
     OtherCourseSettings,
+    PathstreamEnrollment,
     ProgramSalesforceEnrollment,
 )
 
@@ -82,3 +83,19 @@ class ExternalEnrollmentAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     ]
 
     search_fields = ('controller_name', 'course_shell__id', 'email')
+
+
+@admin.register(PathstreamEnrollment)
+class PathstreamEnrollmentAdmin(admin.ModelAdmin):
+    """
+    PathstreamEnrollment model admin.
+    """
+    list_display = [
+        'controller_name',
+        'course_shell_id',
+        'email',
+        'meta',
+        'is_uploaded',
+    ]
+
+    search_fields = ('controller_name', 'course_shell__id', 'email', 'is_uploaded')
