@@ -32,7 +32,7 @@ TIME_ZONE = 'UTC'
 USE_TZ = True
 
 
-def plugin_settings(settings):
+def plugin_settings(settings):  # pylint: disable=R0915
     """
     Set of plugin settings used by the Open Edx platform.
     More info: https://github.com/edx/edx-platform/blob/master/openedx/core/djangoapps/plugins/README.rst

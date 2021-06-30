@@ -1,8 +1,8 @@
 """Openedx external enrollments task file."""
-import datetime as dt
-import time
+from datetime import timedelta
 
-from celery import task, decorators
+from celery import task
+from celery.task import periodic_task
 
 from openedx_external_enrollments.external_enrollments.pathstream_external_enrollment import (
     PathstreamExternalEnrollment,
@@ -28,8 +28,8 @@ def generate_salesforce_enrollment(data, *args, **kwargs):  # pylint: disable=un
         # Calling the controller enrollment method
         enrollment_controller._post_enrollment(data)  # pylint: disable=protected-access
 
- # @decorators.periodic_task(run_every=dt.timedelta(days=1))
-@task() # pylint: disable=not-callable
+
+@periodic_task(run_every=timedelta(days=1))
 def pathstream_periodic_task():
     """
     Executes the _execute_upload method of the Pathstream controller.
@@ -40,4 +40,3 @@ def pathstream_periodic_task():
         pass
     else:
         enrollment_controller.execute_upload()
-

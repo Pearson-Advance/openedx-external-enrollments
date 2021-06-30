@@ -101,3 +101,17 @@ class ExternalEnrollment(models.Model):
         Model meta class.
         """
         app_label = "openedx_external_enrollments"
+
+
+class PathstreamEnrollment(ExternalEnrollment):
+    """
+    Model to persist Pathstream enrollment data.
+    """
+
+    is_uploaded = models.BooleanField(default=False)
+
+    class Meta:
+        """
+        Model meta class.
+        """
+        app_label = "openedx_external_enrollments"
