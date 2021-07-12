@@ -66,4 +66,4 @@ ICC_AUTH_METHOD = "test-auth-method"
 
 OEE_VIPER_IDP = 'okta'
 OEE_VIPER_MUTATIONS_API_KEY = 'viper-mutations-api-key'
-OEE_VIPER_API_URL = 'viper-api-url'
+OEE_VIPER_API_URL = 'https://viper-api-url'

@@ -72,7 +72,7 @@ class OtherCourseSettingsAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
 @admin.register(ExternalEnrollment)
 class ExternalEnrollmentAdmin(ReadOnlyAdminMixin, admin.ModelAdmin):
     """
-    OtherCourseSettings model admin.
+    ExternalEnrollment model admin.
     """
     list_display = [
         'controller_name',
