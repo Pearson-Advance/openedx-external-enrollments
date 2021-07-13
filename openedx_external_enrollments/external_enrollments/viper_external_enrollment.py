@@ -18,6 +18,7 @@ class ViperExternalEnrollment(BaseExternalEnrollment):
     """
     CREATE_ENROLLMENT_ACTION = 'createEnrolment'
     INVITE_LINK_KEYWORD = 'invitations'
+    REFRESH_API_KEY_ACTION = 'resetApiKeyExpirationDate'
 
     def __str__(self):
         return 'viper'
@@ -82,6 +83,44 @@ class ViperExternalEnrollment(BaseExternalEnrollment):
         Method that returns base url for the Viper integration API.
         """
         return settings.OEE_VIPER_API_URL
+
+    def _refresh_api_keys(self):
+        """
+        Method to execute a post request to viper's API, this will refresh the API key Expiration Date.
+        """
+        try:
+            response = requests.post(
+                url=settings.OEE_VIPER_API_URL,
+                headers={'x-api-key': settings.OEE_VIPER_MUTATIONS_API_KEY},
+                json={'action': self.REFRESH_API_KEY_ACTION},
+            )
+        except Exception as error:  # pylint: disable=broad-except
+            error_msg = '[{}\'s] API key refresh execution failed. Reason: {}'.format(str(self), str(error))
+
+            EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
+                request_type=str(self),
+                details=error_msg,
+            )
+            LOG.error(error_msg)
+
+            return str(error), status.HTTP_400_BAD_REQUEST
+        else:
+            json_response = response.json()
+            response_msg = '[{}\'s] API key successfully refreshed -- {}'.format(str(self), json_response)
+
+            if response.status_code == status.HTTP_200_OK:
+                LOG.info(response_msg)
+            else:
+                response_msg = '[{}\'s] API key refresh execution failed. Reason: {}'.format(str(self), json_response)
+
+                LOG.error(response_msg)
+
+            EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
+                request_type=str(self),
+                details=response_msg,
+            )
+
+            return str(response_msg), response.status_code
 
     def _get_course_home_url(self, course_settings, data=None):
         """

@@ -14,6 +14,7 @@ from openedx_external_enrollments.external_enrollments.greenfig_external_enrollm
 )
 from openedx_external_enrollments.external_enrollments.icc_external_enrollment import ICCExternalEnrollment
 from openedx_external_enrollments.external_enrollments.mit_hz_external_enrollment import MITHzInstanceExternalEnrollment
+from openedx_external_enrollments.external_enrollments.viper_external_enrollment import ViperExternalEnrollment
 from openedx_external_enrollments.factory import ExternalEnrollmentFactory
 
 
@@ -29,6 +30,7 @@ class ExternalEnrollmentFactoryTest(TestCase):
         ('icc', ICCExternalEnrollment),
         ('greenfig', GreenfigInstanceExternalEnrollment),
         ('mit_hz', MITHzInstanceExternalEnrollment),
+        ('viper', ViperExternalEnrollment),
     )
     @unpack
     def test_get_enrollment_controller(self, controller, instance, greenfig_configuration_helpers_mock,
