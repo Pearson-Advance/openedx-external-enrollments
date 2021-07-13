@@ -1,3 +1,8 @@
+### Version 3.6.0 - July 13, 2021
+**Changes:**
+
+  - Add Viper refresk API keys task.
+
 ### Version 3.5.0 - June 18, 2021
 **Changes:**
 
