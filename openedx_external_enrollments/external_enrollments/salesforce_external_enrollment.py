@@ -181,12 +181,10 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 related_program = ProgramSalesforceEnrollment.objects.get(  # pylint: disable=no-member
                     bundle_id=bundle_id,
                 )
-                if related_program.meta:
-                    program_of_interest = related_program.meta
-                elif program.get("type") == self.CUSTOM_BUNDLE_TYPE:
-                    program_of_interest = self._get_program_of_interest_from_courses(order_lines)
-                else:
+                program_of_interest = related_program.meta
+                if not related_program.meta:
                     LOG.error('No meta in ProgramSalesforceEnrollment for bundle {}'.format(bundle_id))
+
             else:
                 program_of_interest = self._get_program_of_interest_from_courses(order_lines)
 
@@ -205,7 +203,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             )
             program_of_interest["Secondary_Source"] = program_of_interest.get(
                 "Secondary_Source",
-                ""
+                "",
             )
         except ProgramSalesforceEnrollment.DoesNotExist:  # pylint: disable=no-member
             LOG.error('ProgramSalesforceEnrollment not found for bundle [%s]', program.get("uuid"))
@@ -214,12 +212,36 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
         return program_of_interest
 
-    def _get_courses_data(self, data, order_lines):  # pylint: disable=unused-argument
+    def _get_program_course_runs(self, data):
+        """Returns the list with the course runs of the courses associated with the program."""
+        course_runs = []
+        program = data.get("program")
+
+        if program:
+            course_runs = [
+                run["key"] for course in program.get("courses", []) for run in course.get("course_runs", [])
+            ]
+
+        return course_runs
+
+    def _get_courses_data(self, data, order_lines):
         """
+        Retrieves the following data per course:
+        - CourseName
+        - CourseID
+        - CourseRunID
+        - CourseStartDate
+        - CourseEndDate
+        - CourseDuration
+        - Institution_Hidden
+        - Program_of_Interest
+
+        Institution_Hidden and Program_of_Interest depends on whether the course is
+        part of a program or is just a single course.
 
         :param data:
         :param order_lines:
-        :return:
+        :returns: courses (List of dicts):
         """
         courses = []
         for line in order_lines:
@@ -227,7 +249,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_id = line.get("course_id")
                 course = self._get_course(course_id)
                 course_key = self._get_course_key(course_id)
-                salesforce_settings = course.other_course_settings.get("salesforce_data")
+                salesforce_settings = course.other_course_settings.get("salesforce_data", {})
                 course_data = dict()
                 course_data["CourseName"] = salesforce_settings.get("Program_Name") or course.display_name
                 course_data["CourseID"] = "{}+{}".format(course_key.org, course_key.course)
@@ -235,6 +257,14 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_data["CourseStartDate"] = self._get_course_start_date(course, line.get("user_email"), course_id)
                 course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d")
                 course_data["CourseDuration"] = "0"
+                course_data["Institution_Hidden"] = salesforce_settings.get("Institution_Hidden", "")
+                course_data["Program_of_Interest"] = salesforce_settings.get("Program_of_Interest", "")
+
+                if course_id in self._get_program_course_runs(data):
+                    poi_data = self._get_program_of_interest_data(data, order_lines)
+                    course_data["Institution_Hidden"] = poi_data["Institution_Hidden"]
+                    course_data["Program_of_Interest"] = poi_data["Program_of_Interest"]
+
             except Exception:  # pylint: disable=broad-except
                 pass
             else:
@@ -280,8 +310,6 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             "FirstName",
             "LastName",
             "Email",
-            "Institution_Hidden",
-            "Program_of_Interest",
             "UTM_Parameters",
             "Secondary_Source",
             "Drupal_ID",
@@ -297,11 +325,10 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         payload = {
             "enrollment": {}
         }
-        openedx_user_info = self._get_openedx_user(data)
-        payload["enrollment"].update(openedx_user_info)
 
-        salesforce_data = self._get_salesforce_data(data)
-        payload["enrollment"].update(salesforce_data)
+        payload["enrollment"].update(self._get_openedx_user(data))
+
+        payload["enrollment"].update(self._get_salesforce_data(data))
 
         payload["enrollment"]["Course_Data"] = self._get_courses_data(
             data,
