@@ -1,3 +1,8 @@
+### Version 3.7.0 - August 05, 2021
+**Changes:**
+
+  - Edit salesforce external enrollment to handle the interim case for the SF API.
+
 ### Version 3.6.0 - July 13, 2021
 **Changes:**
 
