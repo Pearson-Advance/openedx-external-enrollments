@@ -1,5 +1,6 @@
 """SalesforceEnrollment class file."""
 import datetime
+import logging
 from urllib.parse import parse_qs, urlsplit
 
 import requests
@@ -14,11 +15,16 @@ from openedx_external_enrollments.edxapp_wrapper.get_student import CourseEnroll
 from openedx_external_enrollments.external_enrollments.base_external_enrollment import BaseExternalEnrollment
 from openedx_external_enrollments.models import ProgramSalesforceEnrollment
 
+LOG = logging.getLogger(__name__)
+
 
 class SalesforceEnrollment(BaseExternalEnrollment):
     """
     SalesforceEnrollment class.
     """
+    def __init__(self):
+        """Instantiate SalesForce variables."""
+        self.CUSTOM_BUNDLE_TYPE = 'special offer'
 
     def __str__(self):
         return "salesforce"
@@ -148,6 +154,15 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
         return salesforce_data
 
+    def _get_program_of_interest_from_courses(self, order_lines):
+        """This method returns data from the first course with SF metadata."""
+        for line in order_lines:
+            course = self._get_course(line.get("course_id"))
+            program_of_interest = course.other_course_settings.get("salesforce_data")
+            if program_of_interest:
+                return program_of_interest
+        return {}
+
     def _get_program_of_interest_data(self, data, order_lines):
         """
 
@@ -162,26 +177,24 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             openedx_user, _ = get_user(email=email)
             request_time = datetime.datetime.utcnow()
             if program:
+                bundle_id = program.get("uuid")
                 related_program = ProgramSalesforceEnrollment.objects.get(  # pylint: disable=no-member
-                    bundle_id=program.get("uuid"),
+                    bundle_id=bundle_id,
                 )
-                program_of_interest = related_program.meta
-                program_of_interest["Drupal_ID"] = "enrollment+program+{}+{}".format(
-                    openedx_user.username,
-                    request_time.strftime("%Y/%m/%d-%H:%M:%S"),
-                )
+                if related_program.meta:
+                    program_of_interest = related_program.meta
+                elif program.get("type") == self.CUSTOM_BUNDLE_TYPE:
+                    program_of_interest = self._get_program_of_interest_from_courses(order_lines)
+                else:
+                    LOG.error('No meta in ProgramSalesforceEnrollment for bundle {}'.format(bundle_id))
             else:
-                for line in order_lines:
-                    course = self._get_course(line.get("course_id"))
-                    program_of_interest = course.other_course_settings.get("salesforce_data")
-                    if program_of_interest:
-                        break
+                program_of_interest = self._get_program_of_interest_from_courses(order_lines)
 
-                program_of_interest["Drupal_ID"] = "enrollment+course+{}+{}".format(
-                    openedx_user.username,
-                    request_time.strftime("%Y-%m-%d-%H:%M:%S"),
-                )
-
+            program_of_interest["Drupal_ID"] = "enrollment+{}+{}+{}".format(
+                "program" if program else "course",
+                openedx_user.username,
+                request_time.strftime("%Y/%m/%d-%H:%M:%S")
+            )
             program_of_interest["Lead_Source"] = program_of_interest.get(
                 "Lead_Source",
                 "",
@@ -194,6 +207,8 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 "Secondary_Source",
                 ""
             )
+        except ProgramSalesforceEnrollment.DoesNotExist:  # pylint: disable=no-member
+            LOG.error('ProgramSalesforceEnrollment not found for bundle [%s]', program.get("uuid"))
         except Exception:  # pylint: disable=broad-except
             pass
 
