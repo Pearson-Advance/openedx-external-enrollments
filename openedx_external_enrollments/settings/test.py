@@ -66,4 +66,9 @@ ICC_AUTH_METHOD = "test-auth-method"
 
 OEE_VIPER_IDP = 'okta'
 OEE_VIPER_MUTATIONS_API_KEY = 'viper-mutations-api-key'
-OEE_VIPER_API_URL = 'https://viper-api-url'
+OEE_VIPER_API_URL = 'viper-api-url'
+
+OEE_PATHSTREAM_S3_FILE = 'test.log'
+OEE_PATHSTREAM_S3_BUCKET = 'test'
+OOE_PATHSTREAM_S3_ACCESS_KEY = 'access_key'
+OOE_PATHSTREAM_S3_SECRET_KEY = 'secret_access_key'
