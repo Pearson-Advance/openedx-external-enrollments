@@ -182,22 +182,6 @@ class PathstreamExternalEnrollmentTest(TestCase):
             self.base._upload_file,  # pylint: disable=protected-access
         )
 
-    @patch('openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.os.path.exists')
-    def test_update_non_existing_file(self, os_exists_mock):
-        """If the file does not exits, _update_file will log an error. """
-        data = []
-        log = 'File does not exist or _download_file has not been called'
-        os_exists_mock.return_value = False # probar
-
-        with LogCapture(level=logging.ERROR) as log_capture:
-            self.base._update_file(data)  # pylint: disable=protected-access
-
-            log_capture.check(
-                (module, 'ERROR', log),
-            )
-
-        #  os_exists_mock.assert_called_with(self.ba)
-
     def test_update_file(self):
         """_update_file should append data to the downloaded file.
         """
@@ -220,42 +204,63 @@ class PathstreamExternalEnrollmentTest(TestCase):
         self.assertEqual(data, result)
 
     @patch('openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.os.path.exists')
-    def test_update_file_does_not_exist(self, mock_os_exists):
+    def test_update_non_existing_file(self, mock_os_exists):
         """_update_file should log an error when it does not find the file."""
         data = []
         log = 'File does not exist or _download_file has not been called'
         mock_os_exists.return_value = False
+        open_mock = mock_open()
 
         with LogCapture(level=logging.ERROR) as log_capture:
-            self.base._update_file(data)  # pylint: disable=protected-access
+            with patch('builtins.open', open_mock):
+                self.base._update_file(data)  # pylint: disable=protected-access
 
             log_capture.check(
                 (module, 'ERROR', log)
             )
 
+        open_mock.assert_not_called()
+
     @patch('openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.os.path.exists')
-    @patch('builtins.open', new_callable=mock_open())
-    def test_update_file_append(self, open_mock, mock_os_exists):
-        """open must be called with the write parametes."""
+    def test_update_file_append(self, mock_os_exists):
+        """open must be called with the append parametes."""
         data = []
         open_operation = 'a'
         s3_file = 'test.log'
         mock_os_exists.return_value = True
+        open_mock = mock_open()
 
-        self.base._update_file(data)  # pylint: disable=protected-access
+        with patch('builtins.open', open_mock):
+            self.base._update_file(data)  # pylint: disable=protected-access
 
         open_mock.assert_called_once_with(s3_file, open_operation)
+
+        handle = open_mock()
+        handle.writelines.assert_called_with(data)
 
     @patch('openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.os.path.exists')
     @patch('openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.os')
     def test_delete_existing_file(self, os_mock, mock_os_exists):
-        """Deletes an existing file."""
+        """This test validates that _delete_downloaded_file deletes an existing file."""
         s3_file = 'test.log'
         mock_os_exists.return_value = True
 
         self.base._delete_downloaded_file()  # pylint: disable=protected-access
 
         os_mock.remove.assert_called_once_with(s3_file)
+
+    @patch('openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.os.path.exists')
+    def test_delete_nonexisting_file(self, mock_os_exists):
+        """_delete_downloaded_file should log an error when it does not find the file."""
+        log = 'File could not be deleted, File does not exist'
+        mock_os_exists.return_value = False
+
+        with LogCapture(level=logging.ERROR) as log_capture:
+            self.base._delete_downloaded_file()  # pylint: disable=protected-access
+
+            log_capture.check(
+                (module, 'ERROR', log)
+            )
 
     @patch.object(PathstreamExternalEnrollment, '_download_file')
     @patch.object(PathstreamExternalEnrollment, '_update_file')
@@ -264,29 +269,39 @@ class PathstreamExternalEnrollmentTest(TestCase):
         'openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.ExternalEnrollment',
         )
     def test_successful_execute_upload_with_data(self, model_mock, upload_mock, update_mock, download_mock):
-        """Testing with data and.
-        download Succesfull
-        update Succesfull
-        upload Succesfull
+        """Testing _execute_upload with data and a successfull proccess of
+        downloading, updating, uploading.
 
-        Objects uloaded meta['is_uploaded']  False -> True
+        'is_uploaded' value must change from False to True.
         """
         qs = [
             Mock(
                 controller_name='pathstream',
                 email='test1@gmail.com',
-                meta={
-                    'is_uploaded': False,
-                    'enrollment_data_formated': 'test_data_1',
-                },
+                meta=[
+                    {
+                        'is_uploaded': False,
+                        'enrollment_data_formated': 'test_data_1',
+                    },
+                    {
+                        'is_uploaded': False,
+                        'enrollment_data_formated': 'test_data_2',
+                    },
+                ]
             ),
             Mock(
                 controller_name='pathstream',
                 email='test2@gmail.com',
-                meta={
-                    'is_uploaded': False,
-                    'enrollment_data_formated': 'test_data_2',
-                },
+                meta=[
+                    {
+                        'is_uploaded': True,
+                        'enrollment_data_formated': 'test_data_3',
+                    },
+                    {
+                        'is_uploaded': False,
+                        'enrollment_data_formated': 'test_data_4',
+                    },
+                ]
             ),
         ]
         model_mock.objects.filter.return_value = qs
@@ -296,30 +311,35 @@ class PathstreamExternalEnrollmentTest(TestCase):
 
         result = self.base.execute_upload()
 
+        update_mock.assert_called_with(
+            [
+                'test_data_1',
+                'test_data_2',
+                'test_data_4',
+            ],
+        )
         model_mock.objects.bulk_update.assert_called_with(qs, ['meta'])
-        self.assertEqual(qs[0].meta['is_uploaded'], True)
-        self.assertEqual(qs[1].meta['is_uploaded'], True)
+        self.assertEqual(qs[0].meta[0]['is_uploaded'], True)
+        self.assertEqual(qs[0].meta[1]['is_uploaded'], True)
+        self.assertEqual(qs[1].meta[1]['is_uploaded'], True)
         self.assertEqual(result, True)
 
+    @patch.object(PathstreamExternalEnrollment, '_init_s3')
+    @patch.object(PathstreamExternalEnrollment, '_delete_downloaded_file')
     @patch.object(PathstreamExternalEnrollment, '_download_file')
     @patch.object(PathstreamExternalEnrollment, '_update_file')
     @patch.object(PathstreamExternalEnrollment, '_upload_file')
     @patch(
         'openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.ExternalEnrollment',
         )
-    def test_successful_execute_upload_without_data(self, model_mock, upload_mock, update_mock, download_mock):
-        """Testing without data and.
-        download Succesfull
-        update Succesfull
-        upload Succesfull
+    def test_successful_execute_upload_without_data(
+            self, model_mock, upload_mock, update_mock, download_mock, delete_mock, init_s3_mock):
+        """Testing _execute_upload without data, In this case the method
+        must not call any other method.
 
         Does not have to update any ExternalEnrollment meta
         """
-        qs = []
-        model_mock.objects.filter.return_value = qs
-        download_mock.return_value = True
-        update_mock.return_value = True
-        upload_mock.return_value = True
+        model_mock.objects.filter.return_value = []
         log = 'There are no new enrollments to update the S3 file'
 
         with LogCapture(level=logging.INFO) as log_capture:
@@ -329,5 +349,10 @@ class PathstreamExternalEnrollmentTest(TestCase):
                 (module, 'INFO', log),
             )
 
+        init_s3_mock.assert_not_called()
+        download_mock.assert_not_called()
+        update_mock.assert_not_called()
+        upload_mock.assert_not_called()
         model_mock.objects.bulk_update.assert_not_called()
+        delete_mock.assert_not_called()
         self.assertEqual(result, True)

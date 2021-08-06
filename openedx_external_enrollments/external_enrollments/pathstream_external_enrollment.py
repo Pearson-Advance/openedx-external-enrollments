@@ -1,7 +1,6 @@
 """PathstreamExternalEnrollment class file."""
 import logging
 import os
-from datetime import datetime
 
 import boto3
 from botocore.exceptions import ClientError
@@ -102,6 +101,12 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         else:
             LOG.error('File could not be deleted, File does not exist')
 
+    def _is_event_able_to_upload(self, event):
+        """This method returns True is the event 'is_uploaded' value is False."""
+        if event.get('is_uploaded') is False:
+            return True
+        return False
+
     def execute_upload(self):
         """
         Context: This method will download, update and upload an S3 File with the
@@ -122,14 +127,17 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
             self._init_s3()
 
             if self._download_file():
-                enrollments_data = [enrollment.meta['enrollment_data_formated'] for enrollment in enrollments_qs]
+                all_events = [events for enrollment in enrollments_qs for events in enrollment.meta]
+                events_to_upload = filter(self._is_event_able_to_upload, all_events)
+                data_to_upload = [event['enrollment_data_formated'] for event in events_to_upload]
 
-                if self._update_file(enrollments_data):
+                if self._update_file(data_to_upload):
 
                     if self._upload_file():
-                        for e in enrollments_qs:
-                            pass
-                            #e.meta.update({'is_uploaded': True})
+                        for enrollment in enrollments_qs:
+                            for event in enrollment.meta:
+                                if not event.get('is_uploaded'):
+                                    event['is_uploaded'] = True
 
                         ExternalEnrollment.objects.bulk_update(enrollments_qs, ['meta'])  # pylint: disable=no-member
                         self._delete_downloaded_file()
