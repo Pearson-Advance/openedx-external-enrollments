@@ -4,11 +4,13 @@ from celery import task
 from rest_framework import status
 =======
 import logging
+<<<<<<< HEAD
 from datetime import timedelta
 >>>>>>> Add S3 management to Pathstream.
+=======
+>>>>>>> Update logic and what methods return.
 
 from celery import task
-from celery.task import periodic_task
 
 from openedx_external_enrollments.external_enrollments.pathstream_external_enrollment import (
     PathstreamExternalEnrollment,
@@ -42,6 +44,7 @@ def generate_salesforce_enrollment(data, *args, **kwargs):  # pylint: disable=un
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 @task(bind=True, default_retry_delay=5*60)  # pylint: disable=not-callable
 def refresh_viper_api_keys(self, *args, **kwargs):  # pylint: disable=unused-argument
 =======
@@ -68,3 +71,16 @@ def pathstream_periodic_task(self):
         if not is_completed:
             self.retry(exc=Exception('execute_upload not completed'))
 >>>>>>> Add S3 management to Pathstream.
+=======
+@task(bind=True, default_retry_delay=5*60)  # pylint: disable=not-callable
+def run_pathstream_task(self):
+    """
+    Executes the _execute_upload method of the Pathstream controller in order to update the remote
+    S3 file.
+    """
+    completed, message = PathstreamExternalEnrollment().execute_upload()
+    if not completed:
+        raise self.retry(exc=Exception(message))
+
+    return {'messge': message}
+>>>>>>> Update logic and what methods return.

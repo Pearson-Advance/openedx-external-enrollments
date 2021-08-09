@@ -124,25 +124,26 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         )
 
         if enrollments_qs:
-            self._init_s3()
-
-            if self._download_file():
+            try:
+                self._init_s3()
+                self._download_file()
                 all_events = [events for enrollment in enrollments_qs for events in enrollment.meta]
                 events_to_upload = filter(self._is_event_able_to_upload, all_events)
                 data_to_upload = [event['enrollment_data_formated'] for event in events_to_upload]
+                self._update_file(data_to_upload)
+                self._upload_file()
 
-                if self._update_file(data_to_upload):
+                for enrollment in enrollments_qs:
+                    for event in enrollment.meta:
+                        if not event.get('is_uploaded'):
+                            event['is_uploaded'] = True
 
-                    if self._upload_file():
-                        for enrollment in enrollments_qs:
-                            for event in enrollment.meta:
-                                if not event.get('is_uploaded'):
-                                    event['is_uploaded'] = True
-
-                        ExternalEnrollment.objects.bulk_update(enrollments_qs, ['meta'])  # pylint: disable=no-member
-                        self._delete_downloaded_file()
-                        return COMPLETED
-            return UNCOMPLETED
+                ExternalEnrollment.objects.bulk_update(enrollments_qs, ['meta'])  # pylint: disable=no-member
+                self._delete_downloaded_file()
+            except Exception:  # pylint: disable=broad-except
+                return UNCOMPLETED
+            else:
+                return COMPLETED
 
         LOG.info('There are no new enrollments to update the S3 file')
         return COMPLETED
@@ -151,4 +152,7 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         pass
 
     def _get_enrollment_url(self, course_settings):
+        pass
+
+    def _get_enrollment_data(self, data, course_settings):
         pass
