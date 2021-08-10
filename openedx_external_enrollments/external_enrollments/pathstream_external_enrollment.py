@@ -1,12 +1,11 @@
 """PathstreamExternalEnrollment class file."""
 import logging
 import os
+from datetime import datetime
 
 import boto3
 from botocore.exceptions import ClientError
 from django.conf import settings
-from datetime import datetime
-
 from django.db import IntegrityError
 
 from openedx_external_enrollments.external_enrollments.base_external_enrollment import BaseExternalEnrollment
@@ -153,8 +152,6 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
 
         LOG.info('There are no new enrollments to update the S3 file')
         return COMPLETED
-    def __str__(self):
-        return 'pathstream'
 
     def _get_enrollment_data(self, data):  # pylint: disable=arguments-differ
         """

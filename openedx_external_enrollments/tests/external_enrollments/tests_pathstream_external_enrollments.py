@@ -3,9 +3,12 @@ import logging
 import os
 
 import boto3
+import ddt
 from botocore.exceptions import ClientError
+from django.db.utils import IntegrityError
 from django.test import TestCase
 from mock import Mock, mock_open, patch
+from opaque_keys.edx.keys import CourseKey
 from testfixtures import LogCapture
 
 from openedx_external_enrollments.external_enrollments.pathstream_external_enrollment import (
@@ -13,11 +16,6 @@ from openedx_external_enrollments.external_enrollments.pathstream_external_enrol
     PathstreamExternalEnrollment,
     S3NotInitialized,
 )
-
-import ddt
-from django.db.utils import IntegrityError
-from opaque_keys.edx.keys import CourseKey
-
 
 
 @ddt.ddt
