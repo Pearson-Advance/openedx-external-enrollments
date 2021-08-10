@@ -9,6 +9,7 @@ from mock import Mock, mock_open, patch
 from testfixtures import LogCapture
 
 from openedx_external_enrollments.external_enrollments.pathstream_external_enrollment import (
+    ExecutionError,
     PathstreamExternalEnrollment,
     S3NotInitialized,
 )
@@ -51,7 +52,7 @@ class PathstreamExternalEnrollmentTest(TestCase):
 
     def test_download_file(self):
         """
-        _download_file must return True and download a file if called with all parameters, and
+        _download_file must download a file if called with all parameters, and
         s3 connection is established.
         """
         s3_file = 'test.log'
@@ -60,7 +61,7 @@ class PathstreamExternalEnrollmentTest(TestCase):
         log = 'File [{}] was downloaded from S3 for [{}]'.format(s3_file, self.base.__str__())
 
         with LogCapture(level=logging.INFO) as log_capture:
-            result = self.base._download_file()  # pylint: disable=protected-access
+            self.base._download_file()  # pylint: disable=protected-access
 
             log_capture.check(
                 (module, 'INFO', log),
@@ -71,11 +72,10 @@ class PathstreamExternalEnrollmentTest(TestCase):
             s3_file,
             s3_file,
         )
-        self.assertEqual(result, True)
 
     def test_download_file_error(self):
         """If no connection or credentials _download_file should
-        handle ClientError and return False.
+        handle ClientError and raise ExecutionError.
         """
         code = '400'
         message = 'Failed'
@@ -100,13 +100,12 @@ class PathstreamExternalEnrollmentTest(TestCase):
         log = 'Failed to download the file to S3. Reason: {}'.format(clienterror_msg)
 
         with LogCapture(level=logging.ERROR) as log_capture:
-            result = self.base._download_file()  # pylint: disable=protected-access
+            with self.assertRaises(ExecutionError):
+                self.base._download_file()  # pylint: disable=protected-access
 
             log_capture.check(
                 (module, 'ERROR', log),
             )
-
-        self.assertEqual(result, False)
 
     def test_download_file_init_s3_not_called(self):
         """_download_file must raise an S3NotInitialized when called without
@@ -117,14 +116,15 @@ class PathstreamExternalEnrollmentTest(TestCase):
         )
 
     def test_upload_file(self):
-        """_upload file must return true if the file was uploaded"""
+        """This test validates that _upload file calls the method to update
+        the S3 file with the right parameters."""
         s3_file = 'test.log'
         s3_bucket = 'test'
         self.base.client = Mock(spec=boto3.client('s3'))
         log = 'File [{}] was uploaded to S3 for [{}]'.format(s3_file, self.base.__str__())
 
         with LogCapture(level=logging.INFO) as log_capture:
-            result = self.base._upload_file()  # pylint: disable=protected-access
+            self.base._upload_file()  # pylint: disable=protected-access
 
             log_capture.check(
                 (module, 'INFO', log),
@@ -135,12 +135,11 @@ class PathstreamExternalEnrollmentTest(TestCase):
             s3_bucket,
             s3_file,
         )
-        self.assertEqual(result, True)
 
     def test_upload_file_error(self):
         """When connection is forbidden or conection can not be
         established, the boto3.client('s3').upload_file will raise
-        a ClientError and _upload_file must return False.
+        a ClientError and _upload_file must also raise ExecutionError.
         """
         code = '400'
         message = 'Failed'
@@ -166,13 +165,12 @@ class PathstreamExternalEnrollmentTest(TestCase):
         log = 'Failed to upload the file to S3. Reason: {}'.format(clienterror_msg)
 
         with LogCapture(level=logging.ERROR) as log_capture:
-            result = self.base._upload_file()  # pylint: disable=protected-access
+            with self.assertRaises(ExecutionError):
+                self.base._upload_file()  # pylint: disable=protected-access
 
             log_capture.check(
                 (module, 'ERROR', log),
             )
-
-        self.assertEqual(result, False)
 
     def test_upload_file_init_s3_not_called(self):
         """_upload_file must raise an S3NotInitialized when called without
@@ -213,7 +211,8 @@ class PathstreamExternalEnrollmentTest(TestCase):
 
         with LogCapture(level=logging.ERROR) as log_capture:
             with patch('builtins.open', open_mock):
-                self.base._update_file(data)  # pylint: disable=protected-access
+                with self.assertRaises(ExecutionError):
+                    self.base._update_file(data)  # pylint: disable=protected-access
 
             log_capture.check(
                 (module, 'ERROR', log)
@@ -256,19 +255,22 @@ class PathstreamExternalEnrollmentTest(TestCase):
         mock_os_exists.return_value = False
 
         with LogCapture(level=logging.ERROR) as log_capture:
-            self.base._delete_downloaded_file()  # pylint: disable=protected-access
+            with self.assertRaises(ExecutionError):
+                self.base._delete_downloaded_file()  # pylint: disable=protected-access
 
             log_capture.check(
                 (module, 'ERROR', log)
             )
-
+    @patch.object(PathstreamExternalEnrollment, '_init_s3')
+    @patch.object(PathstreamExternalEnrollment, '_delete_downloaded_file')
     @patch.object(PathstreamExternalEnrollment, '_download_file')
     @patch.object(PathstreamExternalEnrollment, '_update_file')
     @patch.object(PathstreamExternalEnrollment, '_upload_file')
     @patch(
         'openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.ExternalEnrollment',
         )
-    def test_successful_execute_upload_with_data(self, model_mock, upload_mock, update_mock, download_mock):
+    def test_successful_execute_upload_with_data(
+            self, model_mock, upload_mock, update_mock, download_mock, delete_mock, init_s3_mock):
         """Testing _execute_upload with data and a successfull proccess of
         downloading, updating, uploading.
 
@@ -305,12 +307,11 @@ class PathstreamExternalEnrollmentTest(TestCase):
             ),
         ]
         model_mock.objects.filter.return_value = qs
-        download_mock.return_value = True
-        update_mock.return_value = True
-        upload_mock.return_value = True
 
         result = self.base.execute_upload()
 
+        init_s3_mock.assert_called_once()
+        download_mock.assert_called_once()
         update_mock.assert_called_with(
             [
                 'test_data_1',
@@ -318,7 +319,9 @@ class PathstreamExternalEnrollmentTest(TestCase):
                 'test_data_4',
             ],
         )
+        upload_mock.assert_called_once()
         model_mock.objects.bulk_update.assert_called_with(qs, ['meta'])
+        delete_mock.assert_called_once()
         self.assertEqual(qs[0].meta[0]['is_uploaded'], True)
         self.assertEqual(qs[0].meta[1]['is_uploaded'], True)
         self.assertEqual(qs[1].meta[1]['is_uploaded'], True)

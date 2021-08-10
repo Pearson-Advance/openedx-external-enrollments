@@ -15,7 +15,11 @@ UNCOMPLETED = False
 
 
 class S3NotInitialized(BaseException):
-    """Exception when _init_s3 has not been initialized before calling _upload_file or _download_file """
+    """Exception when _init_s3 has not been initialized before calling _upload_file or _download_file."""
+
+
+class ExecutionError(BaseException):
+    """Exception when the proccess of executing PathstreamExternalEnrollment.execute_upload fails."""
 
 
 class PathstreamExternalEnrollment(BaseExternalEnrollment):
@@ -54,10 +58,9 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
             )
         except ClientError as error:
             LOG.error('Failed to download the file to S3. Reason: %s', str(error))
-            return False
+            raise ExecutionError
 
         LOG.info('File [%s] was downloaded from S3 for [%s]', self.S3_FILE, self.__str__())
-        return True
 
     def _update_file(self, enrollments_data):
         """Append enrollment data to the downloaded S3 file
@@ -67,10 +70,9 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         if os.path.exists(self.S3_FILE):
             with open(self.S3_FILE, 'a') as f:
                 f.writelines(enrollments_data)
-            return True
         else:
             LOG.error('File does not exist or _download_file has not been called')
-            return False
+            raise ExecutionError
 
     def _upload_file(self):
         """Upload the file to an S3 bucket
@@ -88,10 +90,9 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
             )
         except ClientError as error:
             LOG.error('Failed to upload the file to S3. Reason: %s', str(error))
-            return False
+            raise ExecutionError
 
         LOG.info('File [%s] was uploaded to S3 for [%s]', self.S3_FILE, self.__str__())
-        return True
 
     def _delete_downloaded_file(self):
         """Delete the downloaded file.
@@ -100,6 +101,7 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
             os.remove(self.S3_FILE)
         else:
             LOG.error('File could not be deleted, File does not exist')
+            raise ExecutionError
 
     def _is_event_able_to_upload(self, event):
         """This method returns True is the event 'is_uploaded' value is False."""
@@ -140,7 +142,8 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
 
                 ExternalEnrollment.objects.bulk_update(enrollments_qs, ['meta'])  # pylint: disable=no-member
                 self._delete_downloaded_file()
-            except Exception:  # pylint: disable=broad-except
+            except ExecutionError:  # pylint: disable=broad-except
+                LOG.error('The proccess to update the remote S3 file has failed.')
                 return UNCOMPLETED
             else:
                 return COMPLETED
