@@ -331,7 +331,7 @@ class PathstreamExternalEnrollmentTest(TestCase):
         self.assertEqual(qs[0].meta[0]['is_uploaded'], True)
         self.assertEqual(qs[0].meta[1]['is_uploaded'], True)
         self.assertEqual(qs[1].meta[1]['is_uploaded'], True)
-        self.assertEqual(result, True)
+        self.assertEqual(result[0], True)
 
     @patch.object(PathstreamExternalEnrollment, '_init_s3')
     @patch.object(PathstreamExternalEnrollment, '_delete_downloaded_file')
@@ -364,7 +364,7 @@ class PathstreamExternalEnrollmentTest(TestCase):
         upload_mock.assert_not_called()
         model_mock.objects.bulk_update.assert_not_called()
         delete_mock.assert_not_called()
-        self.assertEqual(result, True)
+        self.assertEqual(result[0], True)
         self.assertEqual(self.base.__str__(), 'pathstream')
 
     @patch('openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.datetime')
