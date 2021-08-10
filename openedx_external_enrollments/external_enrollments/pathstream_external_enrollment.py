@@ -144,14 +144,14 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
 
                 ExternalEnrollment.objects.bulk_update(enrollments_qs, ['meta'])  # pylint: disable=no-member
                 self._delete_downloaded_file()
-            except ExecutionError:
+            except ExecutionError as error:
                 LOG.error('The proccess to update the remote S3 file has failed.')
-                return UNCOMPLETED
+                return UNCOMPLETED, str(error)
             else:
-                return COMPLETED
+                return COMPLETED, 'execute_upload completed'
 
         LOG.info('There are no new enrollments to update the S3 file')
-        return COMPLETED
+        return COMPLETED, 'execute_upload completed'
 
     def _get_enrollment_data(self, data):  # pylint: disable=arguments-differ
         """

@@ -45,8 +45,8 @@ def run_pathstream_task(self):
     Executes the _execute_upload method of the Pathstream controller in order to update the remote
     S3 file.
     """
-    completed, message = PathstreamExternalEnrollment().execute_upload()
-    if not completed:
+    is_completed, message = PathstreamExternalEnrollment().execute_upload()
+    if not is_completed:
         raise self.retry(exc=Exception(message))
 
     return {'message': message}
