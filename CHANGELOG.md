@@ -1,3 +1,8 @@
+### Version 3.8.0 - August 10, 2021
+**Changes:**
+
+  - Add the basic Pathstream external enrollment integration.
+
 ### Version 3.7.0 - August 05, 2021
 **Changes:**
 
