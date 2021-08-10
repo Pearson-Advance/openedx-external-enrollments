@@ -261,6 +261,7 @@ class PathstreamExternalEnrollmentTest(TestCase):
             log_capture.check(
                 (module, 'ERROR', log)
             )
+
     @patch.object(PathstreamExternalEnrollment, '_init_s3')
     @patch.object(PathstreamExternalEnrollment, '_delete_downloaded_file')
     @patch.object(PathstreamExternalEnrollment, '_download_file')

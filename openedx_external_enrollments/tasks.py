@@ -38,6 +38,7 @@ def refresh_viper_api_keys(self, *args, **kwargs):  # pylint: disable=unused-arg
 
     return {'message': result_message}
 
+
 @task(bind=True, default_retry_delay=5*60)  # pylint: disable=not-callable
 def run_pathstream_task(self):
     """
