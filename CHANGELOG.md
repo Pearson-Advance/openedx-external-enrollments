@@ -1,3 +1,8 @@
+### Version 3.8.1 - August 18, 2021
+**Changes:**
+
+  - Change the CUSTOM_BUNDLE_TYPE value for SF.
+
 ### Version 3.8.0 - August 10, 2021
 **Changes:**
 
