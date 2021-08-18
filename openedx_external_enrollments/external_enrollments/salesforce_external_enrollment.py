@@ -24,7 +24,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
     """
     def __init__(self):
         """Instantiate SalesForce variables."""
-        self.CUSTOM_BUNDLE_TYPE = 'special offer'
+        self.CUSTOM_BUNDLE_TYPE = 'Special Offer'
 
     def __str__(self):
         return "salesforce"
