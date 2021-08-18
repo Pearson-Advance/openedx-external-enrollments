@@ -239,7 +239,7 @@ class SalesforceEnrollmentTest(TestCase):
         data = {
             'program': {
                 'uuid': 'test-uuid',
-                'type': 'special offer',
+                'type': 'Special Offer',
             },
         }
         expected_data = {
