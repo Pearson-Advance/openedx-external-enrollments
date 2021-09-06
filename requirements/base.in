@@ -10,3 +10,5 @@ oauthlib
 requests-oauthlib
 requests
 xmltodict
+boto3==1.4.8
+botocore==1.8.17
