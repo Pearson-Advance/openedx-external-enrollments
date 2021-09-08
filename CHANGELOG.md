@@ -1,3 +1,8 @@
+### Version 3.8.2 - September 08, 2021
+**Changes:**
+
+  - Fix requirements for Python 3.5, add boto3 and botocore.
+
 ### Version 3.8.1 - August 18, 2021
 **Changes:**
 
