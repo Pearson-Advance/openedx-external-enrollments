@@ -1,3 +1,8 @@
+### Version 3.9.0 - September 09, 2021
+**Changes:**
+
+  - Add MIT Hz enrollment storage in ExternalEnrollment model.
+
 ### Version 3.8.2 - September 08, 2021
 **Changes:**
 
