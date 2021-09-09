@@ -4,11 +4,12 @@ from urllib.parse import quote_plus
 
 import requests
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 
 from openedx_external_enrollments.edxapp_wrapper.get_site_configuration import configuration_helpers
 from openedx_external_enrollments.external_enrollments.base_external_enrollment import BaseExternalEnrollment
-from openedx_external_enrollments.models import EnrollmentRequestLog
+from openedx_external_enrollments.models import EnrollmentRequestLog, ExternalEnrollment
 
 LOG = logging.getLogger(__name__)
 
@@ -30,6 +31,34 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
 
     def __str__(self):
         return 'mit_hz'
+
+    def _execute_post(self, url, data=None, headers=None, json_data=None):
+        """
+        Execute post request which is in charge to refresh the user subscription,
+        in case the user does not exist, it will return 404 but the enrollment/subscription
+        should be saved whether it is ok or not in order to track all enrollments.
+        """
+        user_subscription = {}
+        response = super()._execute_post(url, data, headers, json_data)
+
+        # If the response is ok then it means the user exists, and the subscription expiration date
+        # should be updated to the corresponding MIT HZ courses.
+        if response.ok:
+            user_subscription = response.json().get('user', {})
+
+            ExternalEnrollment.objects.filter(  # pylint: disable=no-member
+                controller_name=str(self),
+                email=json_data.get('user_email'),
+            ).update(meta=user_subscription)
+
+        ExternalEnrollment.objects.update_or_create(  # pylint: disable=no-member
+            controller_name=str(self),
+            course_shell_id=json_data.get('course_id'),
+            email=json_data.get('user_email'),
+            defaults={'meta': user_subscription},
+        )
+
+        return response
 
     def _get_bearer_token(self):
         """
@@ -115,25 +144,30 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
                     request_type=str(self),
                     details=log_details,
                 )
-                return False
+                return {}
 
-            log_details['response'] = response.json()
+            json_response = response.json()
+            log_details['response'] = json_response
             log_details['message'] = 'User found'
             EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
                 request_type=str(self),
                 details=log_details,
             )
 
-            return True
+            return json_response
 
     def _get_enrollment_data(self, data, course_settings):
         """
         Returns the data required to refresh a user in the MIT HORIZON API.
         """
-        enrollment_data = {}
+        enrollment_data = {
+            'user_email': data.get('user_email'),
+            'course_id': str(data.get('course_id')),
+        }
         user_id = self._get_user_id(data.get('user_email'))
         if self._check_user(user_id):
-            enrollment_data['user_id'] = user_id
+            enrollment_data.update({'user_id': user_id})
+
         return enrollment_data
 
     def _get_enrollment_url(self, course_settings):
@@ -150,4 +184,26 @@ class MITHzInstanceExternalEnrollment(BaseExternalEnrollment):
             org=self.MIT_HZ_ORG,
             email=email,
         )
+
         return quote_plus(user_id)
+
+    def _get_course_home_url(self, course_settings, data=None):
+        """Check the user subscription and return the course home URL."""
+        self._check_user_subscription(data)
+
+        return course_settings.get('external_course_target')
+
+    def _check_user_subscription(self, data):
+        """Method to verify and update the user subscription data."""
+        try:
+            enrollment = ExternalEnrollment.objects.get(  # pylint: disable=no-member
+                controller_name=str(self),
+                course_shell=data.get('course_id'),
+                email=data.get('user_email'),
+                meta={},
+            )
+        except ObjectDoesNotExist:
+            return
+
+        enrollment.meta = self._check_user(self._get_user_id(data.get('user_email')))
+        enrollment.save()
