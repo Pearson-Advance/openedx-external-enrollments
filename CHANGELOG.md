@@ -1,3 +1,8 @@
+### Version 3.9.1 - September 13, 2021
+**Changes:**
+
+  - Update Pathstream data format and use EnrollmentRequestLog.
+
 ### Version 3.9.0 - September 09, 2021
 **Changes:**
 
