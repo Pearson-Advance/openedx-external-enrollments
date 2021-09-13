@@ -31,16 +31,26 @@ class PathstreamExternalEnrollmentTest(TestCase):
         """
         self.assertEqual(self.base.__str__(), 'pathstream')
 
+    @patch('openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.get_user')
     @patch('openedx_external_enrollments.external_enrollments.pathstream_external_enrollment.datetime')
-    def test_get_enrollment_data(self, datetime_mock):
+    def test_get_enrollment_data(self, datetime_mock, get_user_mock):
         """Testing _get_enrollment_data method."""
         data = {
             'user_email': self.user_email,
             'is_active': True,
             'course_id': self.course_id,
         }
+        user = Mock()
+        user.first_name = 'fname'
+        user.last_name = 'lname'
+        user.username = 'uname'
+        user.profile.name = 'fullname'
+        get_user_mock.return_value = (user, '')
         datetime_mock.utcnow.return_value = '2021-06-28 16:40:31.456900'
-        expected_data = 'course-v1:test+CS102+2019_T3,test@email,2021-06-28 16:40:31.456900,true\n'
+        expected_data = (
+            'course-v1:test+CS102+2019_T3,test@email,uname,fullname,fname,lname,'
+            '2021-06-28 16:40:31.456900,true\n'
+        )
 
         result = self.base._get_enrollment_data(data)  # pylint: disable=protected-access
 
@@ -59,7 +69,7 @@ class PathstreamExternalEnrollmentTest(TestCase):
             'is_active': True,
             'course_id': self.course_id,
         }
-        enrollment_data = 'course-v1:test+CS102+2019_T3,test@email,2021-06-28 16:40:31.456900,true\n'
+        enrollment_data = 'course-v1:test+CS102+2019_T3,test@email,,,2021-06-28 16:40:31.456900,true\n'
         get_enrollment_data_mock.return_value = enrollment_data
         meta_expected = [
             {
@@ -72,9 +82,13 @@ class PathstreamExternalEnrollmentTest(TestCase):
         model_mock.objects.get_or_create.return_value = (external_enrollment_object, True)
         log1 = 'Calling enrollment for [{}] with data: {}'.format(self.base.__str__(), data)
         log2 = 'Calling enrollment for [{}] with course settings: {}'.format(self.base.__str__(), None)
-        log3 = 'Saving External enrollment object for [{}] -- ExternalEnrollment.id = {}'.format(
-            self.base.__str__(),
-            external_enrollment_object.id,
+        log3 = (
+            'Saving External enrollment object for [{}] -- ExternalEnrollment.id = {} '
+            '-- Enrollment data = [{}]'.format(
+                self.base.__str__(),
+                external_enrollment_object.id,
+                enrollment_data,
+            )
         )
 
         with LogCapture(level=logging.INFO) as log_capture:
@@ -152,7 +166,7 @@ class PathstreamExternalEnrollmentTest(TestCase):
         """This test validates the _post_enrollment execution for missing data.
         For instance, if email or course_id are not in data, this will raise an IntegrityError as
         email and course_id can't be None."""
-        log = 'Failed to complete enrollment, course_id and user_email can\'t be None'
+        log = 'Failed to complete enrollment, course_id and user_email can\'t be None.'
         model_mock.objects.get_or_create.side_effect = IntegrityError
 
         with LogCapture(level=logging.ERROR) as log_capture:
