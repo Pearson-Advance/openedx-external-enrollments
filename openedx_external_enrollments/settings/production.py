@@ -150,3 +150,23 @@ def plugin_settings(settings):
         'OEE_VIPER_IDP',
         settings.OEE_VIPER_IDP,
     )
+    settings.OEE_PATHSTREAM_S3_FILE = getattr(settings, 'ENV_TOKENS', {}).get(
+        'OEE_PATHSTREAM_S3_FILE',
+        settings.OEE_PATHSTREAM_S3_FILE,
+    )
+    settings.OEE_PATHSTREAM_S3_BUCKET = getattr(settings, 'ENV_TOKENS', {}).get(
+        'OEE_PATHSTREAM_S3_BUCKET',
+        settings.OEE_PATHSTREAM_S3_BUCKET,
+    )
+    settings.OOE_PATHSTREAM_S3_ACCESS_KEY = getattr(settings, 'AUTH_TOKENS', {}).get(
+        'OOE_PATHSTREAM_S3_ACCESS_KEY',
+        settings.OOE_PATHSTREAM_S3_ACCESS_KEY,
+    )
+    settings.OOE_PATHSTREAM_S3_SECRET_KEY = getattr(settings, 'AUTH_TOKENS', {}).get(
+        'OOE_PATHSTREAM_S3_SECRET_KEY',
+        settings.OOE_PATHSTREAM_S3_SECRET_KEY,
+    )
+    settings.OOE_PATHSTREAM_S3_DATETIME_FORMAT = getattr(settings, 'ENV_TOKENS', {}).get(
+        'OOE_PATHSTREAM_S3_DATETIME_FORMAT',
+        settings.OOE_PATHSTREAM_S3_DATETIME_FORMAT,
+    )
