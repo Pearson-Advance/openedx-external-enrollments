@@ -1,3 +1,8 @@
+### Version 3.10.1 - September 16, 2021
+**Changes:**
+
+  - Fix the Pathstream task.
+
 ### Version 3.10.0 - September 16, 2021
 **Changes:**
 
