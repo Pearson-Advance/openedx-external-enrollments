@@ -1,3 +1,8 @@
+### Version 3.10.0 - September 16, 2021
+**Changes:**
+
+  - Add the S3 file management feature to Pathstream integration.
+
 ### Version 3.9.1 - September 13, 2021
 **Changes:**
 
