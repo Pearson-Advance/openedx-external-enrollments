@@ -572,7 +572,7 @@ class PathstreamExternalEnrollmentTest(TestCase):
         }
         unenrollment_data = 'course,t@email,uname,fullname,,,2021-06-29 16:50:31.456900,false\n'
         get_enrollment_data_mock.return_value = unenrollment_data
-        meta_expected = initial_meta
+        meta_expected = initial_meta.copy()
         meta_expected.append(
             {
                 'enrollment_data_formated': unenrollment_data,
@@ -620,3 +620,78 @@ class PathstreamExternalEnrollmentTest(TestCase):
             course_shell_id=data.get('course_id'),
             email=data.get('user_email'),
         )
+
+    def test_is_enrollment_duplicated_with_duplicated_data(self):
+        """This test validates that _is_ enrollment duplicated returns True if there is data
+        meeting the requirements to be considered a duplicate enrollment."""
+        enrollment_data1 = 'course1,email,username,fullname,,,2021-07-09 16:53:41.492901,true\n'
+        enrollment_data2 = 'course1,email,username,fullname,,,2021-07-20 16:53:41.492901,false\n'
+        user_enrollments = Mock(
+            meta=[
+                {
+                    'is_uploaded': False,
+                    'enrollment_data_formated': enrollment_data1,
+                },
+                {
+                    'is_uploaded': False,
+                    'enrollment_data_formated': enrollment_data2,
+                },
+            ],
+        )
+        new_enrollment_data = 'course1,email,username,fullname,,,2021-07-20 16:53:42.492901,false\n'
+
+        result = self.base._is_enrollment_duplicated(  # pylint: disable=protected-access
+            user_enrollments.meta,
+            new_enrollment_data
+        )
+
+        self.assertEqual(result, True)
+
+    def test_is_enrollment_duplicated_without_duplicated_data_case_1(self):
+        """This test validates that _is_ enrollment duplicated returns False if there is no data
+        meeting the requirements to be considered a duplicate enrollment."""
+        enrollment_data1 = 'course1,email,username,fullname,,,2021-07-09 16:53:41.492901,true\n'
+        enrollment_data2 = 'course1,email,username,fullname,,,2021-07-20 16:53:41.492901,false\n'
+        user_enrollments = Mock(
+            meta=[
+                {
+                    'is_uploaded': True,
+                    'enrollment_data_formated': enrollment_data1,
+                },
+                {
+                    'is_uploaded': True,
+                    'enrollment_data_formated': enrollment_data2,
+                },
+            ],
+        )
+        new_enrollment_data = 'course1,email,username,fullname,,,2021-07-20 16:53:42.492901,false\n'
+
+        result = self.base._is_enrollment_duplicated(  # pylint: disable=protected-access
+            user_enrollments.meta,
+            new_enrollment_data
+        )
+
+        self.assertEqual(result, False)
+
+    def test_is_enrollment_duplicated_without_duplicated_data_case_2(self):
+        """This test validates that _is_enrollment_duplicated returns False if there is no data meeting the
+        requirements to be considered a duplicate enrollment."""
+        enrollment_data1 = 'course1,email,username,fullname,,,2021-07-09 16:53:41.492901,true\n'
+        enrollment_data2 = 'course1,email,username,fullname,,,2021-07-20 16:53:41.492901,false\n'
+        user_enrollments = Mock(
+            meta=[
+                {
+                    'is_uploaded': False,
+                    'enrollment_data_formated': enrollment_data1,
+                },
+                {
+                    'is_uploaded': False,
+                    'enrollment_data_formated': enrollment_data2,
+                },
+            ],
+        )
+        new_enrollment_data = 'course1,email,username,fullname,,,2021-07-21 16:53:42.492901,true\n'
+
+        result = self.base._is_enrollment_duplicated(user_enrollments.meta, new_enrollment_data)
+
+        self.assertEqual(result, False)
