@@ -692,6 +692,9 @@ class PathstreamExternalEnrollmentTest(TestCase):
         )
         new_enrollment_data = 'course1,email,username,fullname,,,2021-07-21 16:53:42.492901,true\n'
 
-        result = self.base._is_enrollment_duplicated(user_enrollments.meta, new_enrollment_data)
+        result = self.base._is_enrollment_duplicated(  # pylint: disable=protected-access
+            user_enrollments.meta,
+            new_enrollment_data
+        )
 
         self.assertEqual(result, False)
