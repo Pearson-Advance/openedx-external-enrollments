@@ -171,6 +171,26 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         ExternalEnrollment.objects.bulk_update(users_enrollments_qs, ['meta'])  # pylint: disable=no-member
         return COMPLETED, 'execute_upload completed'
 
+    def _is_enrollment_duplicated(self, user_enrollments, new_enrollment):
+        """Returns True if there is already an enrollment in 'user_enrollments' with 'false' status as
+        'new_enrollment', otherwise this method returns False. This method is highly dependent to the
+        file format and only takes into account data which has not been uploaded, which means that the
+        'is_uploaded' enrollment key is False.
+
+        Current file format: 'course_key,email,username,first_name,last_name,date_time,status'.
+
+        This method is intended to mitigate the fact that the unenrollment event is being triggered twice
+        causing duplicate data. That's why this method only takes into account when the status is 'false'."""
+        new_enrollment_status = new_enrollment.split(',')[7]
+
+        for enrollment in user_enrollments:
+            enrollment_status = enrollment.get('enrollment_data_formated', ',,,,,,,').split(',')[7]
+
+            if (enrollment_status == new_enrollment_status == 'false\n') and not enrollment.get('is_uploaded', True):
+                return True
+
+        return False
+
     def _get_enrollment_data(self, data):  # pylint: disable=arguments-differ
         """
         Returns a string with the data required to be treated as a log.
@@ -221,6 +241,9 @@ class PathstreamExternalEnrollment(BaseExternalEnrollment):
         else:
             enrollment.meta = [] if created else enrollment.meta
             enrollment_data = self._get_enrollment_data(data)
+
+            if self._is_enrollment_duplicated(enrollment.meta, enrollment_data):
+                return
 
             enrollment.meta.append(
                 {
