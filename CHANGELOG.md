@@ -1,3 +1,8 @@
+### Version 3.11.0 - September 27, 2021
+**Changes:**
+
+  - Update SF API payload.
+
 ### Version 3.10.1 - September 16, 2021
 **Changes:**
 
