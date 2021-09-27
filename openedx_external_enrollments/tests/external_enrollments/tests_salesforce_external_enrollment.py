@@ -1,12 +1,10 @@
 """Tests SalesforceEnrollment class file."""
-import logging
 from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.test import TestCase
 from mock import Mock, call, patch
 from opaque_keys.edx.keys import CourseKey
-from testfixtures import LogCapture
 
 from openedx_external_enrollments.external_enrollments.salesforce_external_enrollment import SalesforceEnrollment
 from openedx_external_enrollments.models import ProgramSalesforceEnrollment
@@ -222,96 +220,15 @@ class SalesforceEnrollmentTest(TestCase):
         self.assertEqual(expected_data, program_data)
         self.assertTrue(drupal_id.startswith(expected_drupal))
 
-    @patch(
-        'openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.ProgramSalesforceEnrollment'
-    )
-    @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.get_user')
-    @patch.object(SalesforceEnrollment, '_get_course')
-    def test_get_program_of_interest_data_from_program_without_meta(self, get_course_mock, get_user_mock, model_mock):
-        """This test validates that for a program purchase, if program metadata is empty and program type is
-        'special offer', then _get_program_of_interest_data must return POI/IH from the courses."""
-        lines = [
-            {
-                'user_email': 'test-email',
-                'course_id': 'test_course_id',
-            },
-        ]
-        data = {
-            'program': {
-                'uuid': 'test-uuid',
-                'type': 'Special Offer',
-            },
-        }
-        expected_data = {
-                'Institution_Hidden': 'HI_from_course',
-                'Program_of_Interest': 'POI_from_course',
-        }
-        program_sf_enrollment_object = Mock()
-        program_sf_enrollment_object.meta = None
-        model_mock.objects.get.return_value = program_sf_enrollment_object
-        user_mock = Mock()
-        user_mock.username = 'test_user'
-        get_user_mock.return_value = (user_mock, Mock())
-        course_mock = Mock()
-        course_mock.other_course_settings = {
-            'salesforce_data': expected_data,
-        }
-        get_course_mock.return_value = course_mock
-
-        program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
-
-        self.assertEqual(program_data['Institution_Hidden'], expected_data['Institution_Hidden'])
-        self.assertEqual(program_data['Program_of_Interest'], expected_data['Program_of_Interest'])
-
-    @patch(
-        'openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.ProgramSalesforceEnrollment'
-    )
-    @patch(
-        'openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.SalesforceEnrollment.'
-        '_get_program_of_interest_from_courses'
-        )
-    @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.get_user')
-    def test_get_program_of_interest_data_from_program_with_not_valid_bundle_type(
-            self, get_user_mock, get_poi_courses_mock, model_mock):
-        """this test validates when there is no program metadata and program type is not
-        'special offer', then the method should log. This is the result of a configuration error."""
-        lines = [
-            {
-                'user_email': 'test-email',
-                'course_id': 'test_course_id',
-            },
-        ]
-        data = {
-            'program': {
-                'uuid': 'test-uuid',
-                'type': 'other-type',
-            },
-        }
-        user_mock = Mock()
-        user_mock.username = 'test_user'
-        get_user_mock.return_value = (user_mock, Mock())
-        program_sf_enrollment_object = Mock()
-        program_sf_enrollment_object.meta = None
-        model_mock.objects.get.return_value = program_sf_enrollment_object
-        log = 'No meta in ProgramSalesforceEnrollment for bundle {}'.format(data['program']['uuid'])
-
-        with LogCapture(level=logging.ERROR) as log_capture:
-            program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
-
-            log_capture.check(
-                (self.module, 'ERROR', log),
-            )
-
-        get_poi_courses_mock.assert_not_called()
-        self.assertRaises(KeyError, lambda var: var['Institution_Hidden'], program_data)
-        self.assertRaises(KeyError, lambda var: var['Program_of_Interest'], program_data)
-
+    @patch.object(SalesforceEnrollment, '_get_program_course_runs')
     @patch.object(SalesforceEnrollment, '_get_course_start_date')
     @patch.object(SalesforceEnrollment, '_get_course_key')
     @patch.object(SalesforceEnrollment, '_get_course')
-    def test_get_courses_data(self, get_course_mock, get_course_key_mock, get_date_mock):
-        """Testing _get_courses_data method."""
-        self.assertEqual([], self.base._get_courses_data({}, []))  # pylint: disable=protected-access
+    def test_get_courses_data_case_1(self, get_course_mock, get_course_key_mock, get_date_mock, get_runs_mock):
+        """Testing _get_courses_data method for case 1 (Single course)."""
+        result = self.base._get_courses_data({}, [])  # pylint: disable=protected-access
+
+        self.assertEqual(result, [])
 
         lines = [
             {
@@ -324,7 +241,13 @@ class SalesforceEnrollmentTest(TestCase):
         course_mock = Mock()
         course_mock.end = now
         course_mock.display_name = 'test-course'
-        course_mock.other_course_settings = {'salesforce_data': {}}
+        course_mock.other_course_settings = {
+            'salesforce_data': {
+                'Institution_Hidden': 'HI',
+                'Program_of_Interest': 'POI',
+            },
+        }
+        get_runs_mock.return_value = []
         get_course_mock.return_value = course_mock
         get_course_key_mock.return_value = CourseKey.from_string('course-v1:PX+test-course-run-id+2015')
         get_date_mock.return_value = now_date_format
@@ -335,24 +258,220 @@ class SalesforceEnrollmentTest(TestCase):
             'CourseStartDate': now_date_format,
             'CourseEndDate': now_date_format,
             'CourseDuration': '0',
+            'Institution_Hidden': 'HI',
+            'Program_of_Interest': 'POI',
         }
 
-        self.assertEqual([expected_data], self.base._get_courses_data({}, lines))  # pylint: disable=protected-access
+        result = self.base._get_courses_data({}, lines)  # pylint: disable=protected-access
+
+        self.assertEqual(result, [expected_data])
         get_course_mock.assert_called_with('test-course-id')
         get_date_mock.assert_called_with(course_mock, 'test-email', 'test-course-id')
 
-        course_mock.other_course_settings = {
-            'salesforce_data': {
-                'Program_Name': 'test-program',
-            },
-        }
+        course_mock.other_course_settings['salesforce_data']['Program_Name'] = 'test-program'
         expected_data['CourseName'] = 'test-program'
 
-        self.assertEqual([expected_data], self.base._get_courses_data({}, lines))  # pylint: disable=protected-access
+        result = self.base._get_courses_data({}, lines)  # pylint: disable=protected-access
+
+        self.assertEqual(result, [expected_data])
 
         get_course_mock.side_effect = Exception('test-exception')
 
-        self.assertEqual([], self.base._get_courses_data({}, lines))  # pylint: disable=protected-access
+        result = self.base._get_courses_data({}, lines)  # pylint: disable=protected-access
+
+        self.assertEqual(result, [])
+
+    @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
+    @patch.object(SalesforceEnrollment, '_get_program_course_runs')
+    @patch.object(SalesforceEnrollment, '_get_course_start_date')
+    @patch.object(SalesforceEnrollment, '_get_course_key')
+    @patch.object(SalesforceEnrollment, '_get_course')
+    def test_get_courses_data_case_2(
+        self, get_course_mock, get_course_key_mock, get_date_mock,
+        get_runs_mock, get_poi_mock
+    ):
+        """Testing _get_courses_data method for case 2 (1 program)."""
+        course_id = 'test-course-id'
+        lines = [
+            {
+                'user_email': 'test-email',
+                'course_id': course_id,
+            },
+        ]
+        data = {
+            'program': {
+                'courses': [
+                    {
+                        'course_runs': [
+                            {'key': course_id},
+                        ],
+                    },
+                ],
+            },
+        }
+        now = datetime.now()
+        now_date_format = now.strftime('%Y-%m-%d')
+        course_mock = Mock()
+        course_mock.end = now
+        course_mock.display_name = 'test-course'
+        course_mock.other_course_settings = {}
+        get_poi_mock.return_value = {
+            'Institution_Hidden': 'HI_from_program',
+            'Program_of_Interest': 'POI_from_program',
+        }
+        get_runs_mock.return_value = [course_id]
+        get_course_mock.return_value = course_mock
+        get_course_key_mock.return_value = CourseKey.from_string('course-v1:PX+test-course-run-id+2015')
+        get_date_mock.return_value = now_date_format
+        expected_data = {
+            'CourseName': course_mock.display_name,
+            'CourseID': 'PX+test-course-run-id',
+            'CourseRunID': course_id,
+            'CourseStartDate': now_date_format,
+            'CourseEndDate': now_date_format,
+            'CourseDuration': '0',
+            'Institution_Hidden': 'HI_from_program',
+            'Program_of_Interest': 'POI_from_program',
+        }
+
+        result = self.base._get_courses_data(data, lines)  # pylint: disable=protected-access
+
+        self.assertEqual(result, [expected_data])
+        get_course_mock.assert_called_with('test-course-id')
+        get_date_mock.assert_called_with(course_mock, 'test-email', course_id)
+
+    @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
+    @patch.object(SalesforceEnrollment, '_get_program_course_runs')
+    @patch.object(SalesforceEnrollment, '_get_course_start_date')
+    @patch.object(SalesforceEnrollment, '_get_course_key')
+    @patch.object(SalesforceEnrollment, '_get_course')
+    def test_get_courses_data_case_3(
+        self, get_course_mock, get_course_key_mock, get_date_mock,
+        get_runs_mock, get_poi_mock
+    ):
+        """Testing _get_courses_data method for case 3 (1 program and 1 single course)."""
+        single_course_id = 'single-course-id'
+        program_course_id = 'program-course-id'
+        lines = [
+            {
+                'user_email': 'test-email',
+                'course_id': single_course_id,
+            },
+            {
+                'user_email': 'test-email',
+                'course_id': program_course_id,
+            }
+        ]
+        data = {
+            'program': {
+                'courses': [
+                    {
+                        'course_runs': [
+                            {'key': program_course_id},
+                        ],
+                    },
+                ],
+            },
+        }
+        now = datetime.now()
+        now_date_format = now.strftime('%Y-%m-%d')
+        single_course_mock = Mock()
+        single_course_mock.end = now
+        single_course_mock.display_name = 'single-course'
+        single_course_mock.other_course_settings = {
+            'salesforce_data': {
+                'Institution_Hidden': 'HI_from_course',
+                'Program_of_Interest': 'POI_from_course',
+            },
+        }
+        program_course_mock = Mock()
+        program_course_mock.end = now
+        program_course_mock.display_name = 'program-course'
+        program_course_mock.other_course_settings = {}
+        get_runs_mock.side_effect = [
+            [],
+            [program_course_id],
+        ]
+        get_poi_mock.return_value = {
+            'Institution_Hidden': 'HI_from_program',
+            'Program_of_Interest': 'POI_from_program',
+        }
+        get_course_mock.side_effect = [
+            single_course_mock,
+            program_course_mock,
+        ]
+        get_course_key_mock.side_effect = [
+            CourseKey.from_string('course-v1:PX+single-course-run-id+2015'),
+            CourseKey.from_string('course-v1:PX+program-course-run-id+2015'),
+        ]
+        get_date_mock.return_value = now_date_format
+        expected_data = [
+            {
+                'CourseName': single_course_mock.display_name,
+                'CourseID': 'PX+single-course-run-id',
+                'CourseRunID': single_course_id,
+                'CourseStartDate': now_date_format,
+                'CourseEndDate': now_date_format,
+                'CourseDuration': '0',
+                'Institution_Hidden': 'HI_from_course',
+                'Program_of_Interest': 'POI_from_course',
+            },
+            {
+                'CourseName': program_course_mock.display_name,
+                'CourseID': 'PX+program-course-run-id',
+                'CourseRunID': program_course_id,
+                'CourseStartDate': now_date_format,
+                'CourseEndDate': now_date_format,
+                'CourseDuration': '0',
+                'Institution_Hidden': 'HI_from_program',
+                'Program_of_Interest': 'POI_from_program',
+            },
+        ]
+
+        result = self.base._get_courses_data(data, lines)  # pylint: disable=protected-access
+
+        self.assertEqual(result, expected_data)
+
+    @patch.object(SalesforceEnrollment, '_get_program_course_runs')
+    @patch.object(SalesforceEnrollment, '_get_course_start_date')
+    @patch.object(SalesforceEnrollment, '_get_course_key')
+    @patch.object(SalesforceEnrollment, '_get_course')
+    def test_get_courses_data_case_4(self, get_course_mock, get_course_key_mock, get_date_mock, get_runs_mock):
+        """Testing _get_courses_data method for case 4 (Single course without SF in other_course_settings).
+        If the course other_course_settings has no SF settings and is not part of a program then POI/HI should
+        be empty."""
+        lines = [
+            {
+                'user_email': 'test-email',
+                'course_id': 'test-course-id',
+            },
+        ]
+        now = datetime.now()
+        now_date_format = now.strftime('%Y-%m-%d')
+        course_mock = Mock()
+        course_mock.end = now
+        course_mock.display_name = 'test-course'
+        course_mock.other_course_settings = {}
+        get_runs_mock.return_value = []
+        get_course_mock.return_value = course_mock
+        get_course_key_mock.return_value = CourseKey.from_string('course-v1:PX+test-course-run-id+2015')
+        get_date_mock.return_value = now_date_format
+        expected_data = {
+            'CourseName': course_mock.display_name,
+            'CourseID': 'PX+test-course-run-id',
+            'CourseRunID': 'test-course-id',
+            'CourseStartDate': now_date_format,
+            'CourseEndDate': now_date_format,
+            'CourseDuration': '0',
+            'Institution_Hidden': '',
+            'Program_of_Interest': '',
+        }
+
+        result = self.base._get_courses_data({}, lines)  # pylint: disable=protected-access
+
+        self.assertEqual(result, [expected_data])
+        get_course_mock.assert_called_with('test-course-id')
+        get_date_mock.assert_called_with(course_mock, 'test-email', 'test-course-id')
 
     def test_is_external_course(self):
         """Testing _is_external_course method."""
@@ -494,10 +613,10 @@ class SalesforceEnrollmentTest(TestCase):
             course3_mock,
         ]
         expected_data = course2_mock.other_course_settings['salesforce_data']
+        calls = [call(course1_id), call(course2_id)]
 
         result = self.base._get_program_of_interest_from_courses(lines)  # pylint: disable=protected-access
 
-        calls = [call(course1_id), call(course2_id)]
         get_course_mock.assert_has_calls(calls)
         self.assertEqual(result, expected_data)
 
@@ -517,3 +636,141 @@ class SalesforceEnrollmentTest(TestCase):
 
         get_course_mock.assert_called_with(course1_id)
         self.assertEqual(result, {})
+
+    @patch.object(SalesforceEnrollment, '_get_salesforce_data')
+    @patch.object(SalesforceEnrollment, '_get_openedx_user')
+    @patch.object(SalesforceEnrollment, '_get_courses_data')
+    def test_get_enrollment_data_new_version(self, get_course_mock, get_openedx_mock, get_salesforce_mock):
+        """Testing _get_enrollment_data updated method."""
+        now = datetime.now()
+        lines = [
+            {'user_email': 'test-email'},
+        ]
+        data = {
+            'test': 'data',
+            'supported_lines': lines,
+        }
+        user_data = {
+            'FirstName': 'Peter',
+            'LastName': 'Parker',
+            'Email': 'test-email',
+        }
+        salesforce_data = {
+            "Institution_Hidden": "hidden_institution",
+            "Type_Hidden": "type",
+            "Company": "company",
+            "Program_of_Interest": "Programilla - Cursillo 1",
+            'Lead_Source': 'test-source',
+            'Secondary_Source': '',
+            'UTM_Parameters': '',
+        }
+        course_data = {
+            'CourseName': 'test-course-name',
+            'CourseCode': 'test-code',
+            'CourseStartDate': now,
+            'CourseEndDate': now.strftime('%Y-%m-%d'),
+            'CourseDuration': '0',
+        }
+        get_openedx_mock.return_value = user_data
+        get_salesforce_mock.return_value = salesforce_data
+        get_course_mock.return_value = course_data
+
+        enrollment = {}
+        enrollment.update(user_data)
+        enrollment.update(salesforce_data)
+        enrollment['Course_Data'] = course_data
+        expected_data = {
+            'enrollment': enrollment,
+        }
+        expected_data['enrollment']['Course_Data'].update(
+            {
+                "Program_of_Interest": expected_data["enrollment"].pop("Program_of_Interest"),
+                "Institution_Hiden": expected_data["enrollment"].pop("Institution_Hidden"),
+            },
+        )
+
+        result = self.base._get_enrollment_data(data, {})  # pylint: disable=protected-access
+
+        self.assertEqual(result, expected_data)
+        get_openedx_mock.assert_called_once_with(data)
+        get_salesforce_mock.assert_called_once_with(data)
+        get_course_mock.assert_called_once_with(data, lines)
+
+        user_data['unwanted_key'] = 'testing'
+        get_openedx_mock.return_value = user_data
+
+        result = self.base._get_enrollment_data(data, {})  # pylint: disable=protected-access
+
+        self.assertEqual(result, expected_data)
+
+    def test_get_program_course_runs_with_data(self):
+        """This test validates _get_program_course_runs with data."""
+        data = {
+            'program': {
+                'courses': [
+                    {
+                        'course_runs': [
+                            {'key': 'course-test1'},
+                            {'key': 'course-test2'},
+                        ],
+                    },
+                    {
+                        'course_runs': [
+                            {'key': 'course-test3'},
+                            {'key': 'course-test4'},
+                        ],
+                    },
+                ],
+            },
+        }
+        expected_result = [
+            'course-test1',
+            'course-test2',
+            'course-test3',
+            'course-test4',
+        ]
+
+        result = self.base._get_program_course_runs(data)  # pylint: disable=protected-access
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_program_course_runs_without_program(self):
+        """This test validates _get_program_course_runs when
+        there is no program."""
+        data = {}
+        expected_result = []
+
+        result = self.base._get_program_course_runs(data)  # pylint: disable=protected-access
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_program_course_runs_without_courses(self):
+        """This test validates _get_program_course_runs when the
+        program misses courses."""
+        data = {
+            'program': {
+                'courses': [],
+            },
+        }
+        expected_result = []
+
+        result = self.base._get_program_course_runs(data)  # pylint: disable=protected-access
+
+        self.assertEqual(result, expected_result)
+
+    def test_get_program_course_runs_without_course_runs(self):
+        """This test validates _get_program_course_runs when the
+        courses miss course runs."""
+        data = {
+            'program': {
+                'courses': [
+                    {'course_runs': []},
+                    {'course_runs': []},
+                ],
+            },
+        }
+        expected_result = []
+
+        result = self.base._get_program_course_runs(data)  # pylint: disable=protected-access
+
+        self.assertEqual(result, expected_result)
