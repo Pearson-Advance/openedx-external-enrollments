@@ -250,6 +250,8 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course = self._get_course(course_id)
                 course_key = self._get_course_key(course_id)
                 salesforce_settings = course.other_course_settings.get("salesforce_data", {})
+                ih_from_course = salesforce_settings.get("Institution_Hidden", "")
+                poi_from_course = salesforce_settings.get("Program_of_Interest", "")
                 course_data = dict()
                 course_data["CourseName"] = salesforce_settings.get("Program_Name") or course.display_name
                 course_data["CourseID"] = "{}+{}".format(course_key.org, course_key.course)
@@ -257,13 +259,13 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_data["CourseStartDate"] = self._get_course_start_date(course, line.get("user_email"), course_id)
                 course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d")
                 course_data["CourseDuration"] = "0"
-                course_data["Institution_Hidden"] = salesforce_settings.get("Institution_Hidden", "")
-                course_data["Program_of_Interest"] = salesforce_settings.get("Program_of_Interest", "")
+                course_data["Institution_Hidden"] = ih_from_course
+                course_data["Program_of_Interest"] = poi_from_course
 
                 if course_id in self._get_program_course_runs(data):
                     poi_data = self._get_program_of_interest_data(data, order_lines)
-                    course_data["Institution_Hidden"] = poi_data["Institution_Hidden"]
-                    course_data["Program_of_Interest"] = poi_data["Program_of_Interest"]
+                    course_data["Institution_Hidden"] = poi_data.get("Institution_Hidden", ih_from_course)
+                    course_data["Program_of_Interest"] = poi_data.get("Program_of_Interest", poi_from_course)
 
             except Exception:  # pylint: disable=broad-except
                 pass
