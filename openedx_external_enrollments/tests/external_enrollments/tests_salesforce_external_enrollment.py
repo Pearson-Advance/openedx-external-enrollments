@@ -345,6 +345,129 @@ class SalesforceEnrollmentTest(TestCase):
     @patch.object(SalesforceEnrollment, '_get_course_start_date')
     @patch.object(SalesforceEnrollment, '_get_course_key')
     @patch.object(SalesforceEnrollment, '_get_course')
+    def test_get_courses_data_case_2_with_empty_get_program_of_interest_data(
+        self, get_course_mock, get_course_key_mock, get_date_mock,
+        get_runs_mock, get_poi_mock
+    ):
+        """Testing _get_courses_data method for case 2 (1 program) when _get_program_of_interest_data
+        returns an empty dict (This is caused by a non-existing ProgramSalesforceEnrollment for the program).
+        In this case the program courses must get Institution_Hidden and Program_of_Interest from their
+        other_course_settings."""
+        course_id = 'test-course-id'
+        lines = [
+            {
+                'user_email': 'test-email',
+                'course_id': course_id,
+            },
+        ]
+        data = {
+            'program': {
+                'courses': [
+                    {
+                        'course_runs': [
+                            {'key': course_id},
+                        ],
+                    },
+                ],
+            },
+        }
+        now = datetime.now()
+        now_date_format = now.strftime('%Y-%m-%d')
+        course_mock = Mock()
+        course_mock.end = now
+        course_mock.display_name = 'test-course'
+        course_mock.other_course_settings = {
+            'salesforce_data': {
+                'Institution_Hidden': 'HI_from_course',
+                'Program_of_Interest': 'POI_from_course',
+            },
+        }
+        get_poi_mock.return_value = {}
+        get_runs_mock.return_value = [course_id]
+        get_course_mock.return_value = course_mock
+        get_course_key_mock.return_value = CourseKey.from_string('course-v1:PX+test-course-run-id+2015')
+        get_date_mock.return_value = now_date_format
+        expected_data = {
+            'CourseName': course_mock.display_name,
+            'CourseID': 'PX+test-course-run-id',
+            'CourseRunID': course_id,
+            'CourseStartDate': now_date_format,
+            'CourseEndDate': now_date_format,
+            'CourseDuration': '0',
+            'Institution_Hidden': 'HI_from_course',
+            'Program_of_Interest': 'POI_from_course',
+        }
+
+        result = self.base._get_courses_data(data, lines)  # pylint: disable=protected-access
+
+        self.assertEqual(result, [expected_data])
+        get_course_mock.assert_called_with('test-course-id')
+        get_date_mock.assert_called_with(course_mock, 'test-email', course_id)
+
+    @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
+    @patch.object(SalesforceEnrollment, '_get_program_course_runs')
+    @patch.object(SalesforceEnrollment, '_get_course_start_date')
+    @patch.object(SalesforceEnrollment, '_get_course_key')
+    @patch.object(SalesforceEnrollment, '_get_course')
+    def test_get_courses_data_case_2_with_empty_get_program_of_interest_data_and_no_other_course_settings(
+        self, get_course_mock, get_course_key_mock, get_date_mock,
+        get_runs_mock, get_poi_mock
+    ):
+        """Testing _get_courses_data method for case 2 (1 program) when _get_program_of_interest_data
+        returns an empty dict (This is caused by a non-existing ProgramSalesforceEnrollment for the program),
+        and other_course_settings has no SF settings. In this case the program courses must have empty values for
+        Institution_Hidden and Program_of_Interest."""
+        course_id = 'test-course-id'
+        lines = [
+            {
+                'user_email': 'test-email',
+                'course_id': course_id,
+            },
+        ]
+        data = {
+            'program': {
+                'courses': [
+                    {
+                        'course_runs': [
+                            {'key': course_id},
+                        ],
+                    },
+                ],
+            },
+        }
+        now = datetime.now()
+        now_date_format = now.strftime('%Y-%m-%d')
+        course_mock = Mock()
+        course_mock.end = now
+        course_mock.display_name = 'test-course'
+        course_mock.other_course_settings = {}
+        get_poi_mock.return_value = {}
+        get_runs_mock.return_value = [course_id]
+        get_course_mock.return_value = course_mock
+        get_course_key_mock.return_value = CourseKey.from_string('course-v1:PX+test-course-run-id+2015')
+        get_date_mock.return_value = now_date_format
+        expected_data = {
+            'CourseName': course_mock.display_name,
+            'CourseID': 'PX+test-course-run-id',
+            'CourseRunID': course_id,
+            'CourseStartDate': now_date_format,
+            'CourseEndDate': now_date_format,
+            'CourseDuration': '0',
+            'Institution_Hidden': '',
+            'Program_of_Interest': '',
+        }
+
+        result = self.base._get_courses_data(data, lines)  # pylint: disable=protected-access
+
+        self.assertEqual(result, [expected_data])
+        get_course_mock.assert_called_with('test-course-id')
+        get_date_mock.assert_called_with(course_mock, 'test-email', course_id)
+
+    @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
+    @patch.object(SalesforceEnrollment, '_get_program_course_runs')
+    @patch.object(SalesforceEnrollment, '_get_course_start_date')
+    @patch.object(SalesforceEnrollment, '_get_course_key')
+    @patch.object(SalesforceEnrollment, '_get_course')
     def test_get_courses_data_case_3(
         self, get_course_mock, get_course_key_mock, get_date_mock,
         get_runs_mock, get_poi_mock
