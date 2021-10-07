@@ -264,7 +264,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_data["Institution_Hidden"] = ih_from_course
                 course_data["Program_of_Interest"] = poi_from_course
 
-                if course_id in program_course_runs:
+                if self._is_course_part_of_program(course_id, program_course_runs):
                     course_data["Institution_Hidden"] = poi_data.get("Institution_Hidden", ih_from_course)
                     course_data["Program_of_Interest"] = poi_data.get("Program_of_Interest", poi_from_course)
 
@@ -274,6 +274,17 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 courses.append(course_data)
 
         return courses
+
+    def _is_course_part_of_program(self, course_id, program_course_runs):
+        """This method checks whether or not a course is part of the program in the
+        purchase by comparing the course_runs which belong to the program.
+
+        :return: True if the course belongs to the program. False otherwise.
+        """
+        if course_id in program_course_runs:
+            return True
+
+        return False
 
     @staticmethod
     def _is_external_course(course):
