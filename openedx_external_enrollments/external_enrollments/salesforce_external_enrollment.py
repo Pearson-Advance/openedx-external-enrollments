@@ -155,7 +155,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         return salesforce_data
 
     def _get_program_of_interest_from_courses(self, order_lines):
-        """This method returns data from the first course with SF metadata."""
+        """This method returns SF settings data from the first course with SF metadata."""
         for line in order_lines:
             course = self._get_course(line.get("course_id"))
             program_of_interest = course.other_course_settings.get("salesforce_data")
@@ -165,50 +165,74 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
     def _get_program_of_interest_data(self, data, order_lines):
         """
+        Return the following data:
+        - Drupal_ID
+        - Lead_Source
+        - UTM_Parameters
+        - Secondary_Source
+
+        Where the above data is retrieved depends on the case:
+
+        1. If program purchase and there is ProgramSalesforceEnrollment for the program with its
+        meta attribute populated, then the SF settings get pulled from this meta attribute.
+
+        2. If program purchase and does not exist a ProgramSalesforceEnrollment for the program,
+        then the SF settings get pulled from the first course with SF settings.
+
+        3. If program purchase and ProgramSalesforceEnrollment exists for the program but its meta
+        attribute is empty, then the SF settings get pulled from the first course with SF settings.
+
+        4. If course purchase, then the SF settings get pulled from the first course with SF
+        settings
 
         :param data:
         :param order_lines:
-        :return:
+        :return: (dict)
         """
         program_of_interest = {}
         program = data.get("program")
+        request_time = datetime.datetime.utcnow()
         try:
             email = order_lines[0].get("user_email")
             openedx_user, _ = get_user(email=email)
-            request_time = datetime.datetime.utcnow()
-            if program:
-                bundle_id = program.get("uuid")
+        except Exception:  # pylint: disable=broad-except
+            return program_of_interest
+
+        if program:
+            bundle_id = program.get("uuid")
+            try:
                 related_program = ProgramSalesforceEnrollment.objects.get(  # pylint: disable=no-member
                     bundle_id=bundle_id,
                 )
                 program_of_interest = related_program.meta
-                if not related_program.meta:
+                if not program_of_interest:
                     LOG.error('No meta in ProgramSalesforceEnrollment for bundle {}'.format(bundle_id))
+                    program_of_interest = self._get_program_of_interest_from_courses(order_lines)
 
-            else:
+            except ProgramSalesforceEnrollment.DoesNotExist:  # pylint: disable=no-member
+                LOG.error('ProgramSalesforceEnrollment not found for bundle [%s]', program.get("uuid"))
                 program_of_interest = self._get_program_of_interest_from_courses(order_lines)
 
-            program_of_interest["Drupal_ID"] = "enrollment+{}+{}+{}".format(
-                "program" if program else "course",
-                openedx_user.username,
-                request_time.strftime("%Y/%m/%d-%H:%M:%S")
-            )
-            program_of_interest["Lead_Source"] = program_of_interest.get(
-                "Lead_Source",
-                "",
-            )
-            program_of_interest["UTM_Parameters"] = data.get(
-                "utm_params",
-                "",
-            )
-            program_of_interest["Secondary_Source"] = program_of_interest.get(
-                "Secondary_Source",
-                "",
-            )
-        except ProgramSalesforceEnrollment.DoesNotExist:  # pylint: disable=no-member
-            LOG.error('ProgramSalesforceEnrollment not found for bundle [%s]', program.get("uuid"))
-        except Exception:  # pylint: disable=broad-except
-            pass
+        else:
+            program_of_interest = self._get_program_of_interest_from_courses(order_lines)
+
+        program_of_interest["Drupal_ID"] = "enrollment+{}+{}+{}".format(
+            "program" if program else "course",
+            openedx_user.username,
+            request_time.strftime("%Y/%m/%d-%H:%M:%S")
+        )
+        program_of_interest["Lead_Source"] = program_of_interest.get(
+            "Lead_Source",
+            "",
+        )
+        program_of_interest["UTM_Parameters"] = data.get(
+            "utm_params",
+            "",
+        )
+        program_of_interest["Secondary_Source"] = program_of_interest.get(
+            "Secondary_Source",
+            "",
+        )
 
         return program_of_interest
 
