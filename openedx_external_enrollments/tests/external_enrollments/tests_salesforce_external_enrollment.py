@@ -511,10 +511,7 @@ class SalesforceEnrollmentTest(TestCase):
         program_course_mock.end = now
         program_course_mock.display_name = 'program-course'
         program_course_mock.other_course_settings = {}
-        get_runs_mock.side_effect = [
-            [],
-            [program_course_id],
-        ]
+        get_runs_mock.return_value = [program_course_id]
         get_poi_mock.return_value = {
             'Institution_Hidden': 'HI_from_program',
             'Program_of_Interest': 'POI_from_program',

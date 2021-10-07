@@ -244,6 +244,8 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         :returns: courses (List of dicts):
         """
         courses = []
+        program_course_runs = self._get_program_course_runs(data)
+        poi_data = self._get_program_of_interest_data(data, order_lines)
         for line in order_lines:
             try:
                 course_id = line.get("course_id")
@@ -262,8 +264,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_data["Institution_Hidden"] = ih_from_course
                 course_data["Program_of_Interest"] = poi_from_course
 
-                if course_id in self._get_program_course_runs(data):
-                    poi_data = self._get_program_of_interest_data(data, order_lines)
+                if course_id in program_course_runs:
                     course_data["Institution_Hidden"] = poi_data.get("Institution_Hidden", ih_from_course)
                     course_data["Program_of_Interest"] = poi_data.get("Program_of_Interest", poi_from_course)
 
