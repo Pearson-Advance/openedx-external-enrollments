@@ -142,20 +142,31 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         """
         salesforce_data = {}
         order_lines = data.get("supported_lines")
-        if order_lines:
-            try:
-                salesforce_data.update(self._get_program_of_interest_data(data, order_lines))
-                salesforce_data["Order_Number"] = data.get("number")
-                salesforce_data["Purchase_Type"] = "Program" if data.get("program") else "Course"
-                salesforce_data["PaymentAmount"] = data.get("paid_amount")
-                salesforce_data["Amount_Currency"] = data.get("currency")
-            except Exception:  # pylint: disable=broad-except
-                pass
+        if not order_lines:
+            return salesforce_data
+
+        program = data.get("program")
+        email = order_lines[0].get("user_email")
+        openedx_user, _ = get_user(email=email)
+        try:
+            salesforce_data.update(self._get_program_of_interest_data(data, order_lines))
+            salesforce_data["Order_Number"] = data.get("number")
+            salesforce_data["Purchase_Type"] = "Program" if program else "Course"
+            salesforce_data["PaymentAmount"] = data.get("paid_amount")
+            salesforce_data["Amount_Currency"] = data.get("currency")
+            salesforce_data["UTM_Parameters"] = data.get("utm_params", "")
+            salesforce_data["Drupal_ID"] = "enrollment+{}+{}+{}".format(
+                "program" if program else "course",
+                openedx_user.username,
+                datetime.datetime.utcnow().strftime("%Y/%m/%d-%H:%M:%S"),
+            )
+        except Exception:  # pylint: disable=broad-except
+            pass
 
         return salesforce_data
 
     def _get_program_of_interest_from_courses(self, order_lines):
-        """This method returns data from the first course with SF metadata."""
+        """This method returns SF settings data from the first course with SF metadata."""
         for line in order_lines:
             course = self._get_course(line.get("course_id"))
             program_of_interest = course.other_course_settings.get("salesforce_data")
@@ -165,49 +176,82 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
     def _get_program_of_interest_data(self, data, order_lines):
         """
+        Return SF settings from course/program and the following data:
+        - Lead_Source
+        - Secondary_Source
+
+        Where the above data is retrieved depends on the case:
+
+        1. If program purchase and there is ProgramSalesforceEnrollment for the program with its
+        meta attribute populated, then the SF settings get pulled from this meta attribute.
+
+        2. If program purchase and does not exist a ProgramSalesforceEnrollment for the program,
+        then the SF settings get pulled from the first course with SF settings.
+
+        3. If program purchase and ProgramSalesforceEnrollment exists for the program but its meta
+        attribute is empty, then the SF settings get pulled from the first course with SF settings.
+
+        4. If course purchase, then the SF settings get pulled from the first course with SF
+        settings
 
         :param data:
         :param order_lines:
-        :return:
+        :return: (dict)
         """
         program_of_interest = {}
         program = data.get("program")
-        try:
-            email = order_lines[0].get("user_email")
-            openedx_user, _ = get_user(email=email)
-            request_time = datetime.datetime.utcnow()
-            if program:
-                bundle_id = program.get("uuid")
+
+        if program:
+            bundle_id = program.get("uuid")
+            try:
                 related_program = ProgramSalesforceEnrollment.objects.get(  # pylint: disable=no-member
                     bundle_id=bundle_id,
                 )
                 program_of_interest = related_program.meta
-                if not related_program.meta:
+                if not program_of_interest:
                     LOG.error('No meta in ProgramSalesforceEnrollment for bundle {}'.format(bundle_id))
+                    program_of_interest = {}
 
-            else:
-                program_of_interest = self._get_program_of_interest_from_courses(order_lines)
+            except ProgramSalesforceEnrollment.DoesNotExist:  # pylint: disable=no-member
+                LOG.error('ProgramSalesforceEnrollment not found for bundle [%s]', program.get("uuid"))
 
-            program_of_interest["Drupal_ID"] = "enrollment+{}+{}+{}".format(
-                "program" if program else "course",
-                openedx_user.username,
-                request_time.strftime("%Y/%m/%d-%H:%M:%S")
+        else:
+            program_of_interest = self._get_program_of_interest_from_courses(order_lines)
+
+        program_of_interest["Lead_Source"] = program_of_interest.get(
+            "Lead_Source",
+            "",
+        )
+        program_of_interest["Secondary_Source"] = program_of_interest.get(
+            "Secondary_Source",
+            "",
+        )
+
+        return program_of_interest
+
+    def _get_program_of_interest_from_program(self, data):
+        """
+        Retrieve the SF settings of the bundle/program associated with the purchase.
+
+        In case the purchase is not a program purchase, this method returns an empty dict. The
+        same happens when even if it is a program purchase but ProgramSalesForceEnrollment
+        does not exits for the bundle or its meta attribute is null, this method returns an
+        empty dict.
+        """
+        program_of_interest = {}
+        program = data.get("program")
+        if not program:
+            return program_of_interest
+
+        try:
+            bundle_id = program.get("uuid")
+            related_program = ProgramSalesforceEnrollment.objects.get(  # pylint: disable=no-member
+                bundle_id=bundle_id,
             )
-            program_of_interest["Lead_Source"] = program_of_interest.get(
-                "Lead_Source",
-                "",
-            )
-            program_of_interest["UTM_Parameters"] = data.get(
-                "utm_params",
-                "",
-            )
-            program_of_interest["Secondary_Source"] = program_of_interest.get(
-                "Secondary_Source",
-                "",
-            )
+            program_of_interest = related_program.meta
+            if not program_of_interest:
+                program_of_interest = {}
         except ProgramSalesforceEnrollment.DoesNotExist:  # pylint: disable=no-member
-            LOG.error('ProgramSalesforceEnrollment not found for bundle [%s]', program.get("uuid"))
-        except Exception:  # pylint: disable=broad-except
             pass
 
         return program_of_interest
@@ -244,6 +288,8 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         :returns: courses (List of dicts):
         """
         courses = []
+        program_course_runs = self._get_program_course_runs(data)
+        poi_data = self._get_program_of_interest_from_program(data)
         for line in order_lines:
             try:
                 course_id = line.get("course_id")
@@ -262,8 +308,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_data["Institution_Hidden"] = ih_from_course
                 course_data["Program_of_Interest"] = poi_from_course
 
-                if course_id in self._get_program_course_runs(data):
-                    poi_data = self._get_program_of_interest_data(data, order_lines)
+                if self._is_course_part_of_program(course_id, program_course_runs):
                     course_data["Institution_Hidden"] = poi_data.get("Institution_Hidden", ih_from_course)
                     course_data["Program_of_Interest"] = poi_data.get("Program_of_Interest", poi_from_course)
 
@@ -273,6 +318,17 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 courses.append(course_data)
 
         return courses
+
+    def _is_course_part_of_program(self, course_id, program_course_runs):
+        """This method checks whether or not a course is part of the program in the
+        purchase by comparing the course_runs which belong to the program.
+
+        :return: True if the course belongs to the program. False otherwise.
+        """
+        if course_id in program_course_runs:
+            return True
+
+        return False
 
     @staticmethod
     def _is_external_course(course):
