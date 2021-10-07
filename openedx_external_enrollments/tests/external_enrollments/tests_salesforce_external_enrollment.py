@@ -281,7 +281,7 @@ class SalesforceEnrollmentTest(TestCase):
 
         self.assertEqual(result, [])
 
-    @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
+    @patch.object(SalesforceEnrollment, '_get_program_of_interest_from_program')
     @patch.object(SalesforceEnrollment, '_get_program_course_runs')
     @patch.object(SalesforceEnrollment, '_get_course_start_date')
     @patch.object(SalesforceEnrollment, '_get_course_key')
@@ -340,16 +340,16 @@ class SalesforceEnrollmentTest(TestCase):
         get_course_mock.assert_called_with('test-course-id')
         get_date_mock.assert_called_with(course_mock, 'test-email', course_id)
 
-    @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
+    @patch.object(SalesforceEnrollment, '_get_program_of_interest_from_program')
     @patch.object(SalesforceEnrollment, '_get_program_course_runs')
     @patch.object(SalesforceEnrollment, '_get_course_start_date')
     @patch.object(SalesforceEnrollment, '_get_course_key')
     @patch.object(SalesforceEnrollment, '_get_course')
-    def test_get_courses_data_case_2_with_empty_get_program_of_interest_data(
+    def test_get_courses_data_case_2_with_empty_get_program_of_interest_from_program(
         self, get_course_mock, get_course_key_mock, get_date_mock,
         get_runs_mock, get_poi_mock
     ):
-        """Testing _get_courses_data method for case 2 (1 program) when _get_program_of_interest_data
+        """Testing _get_courses_data method for case 2 (1 program) when _get_program_of_interest_from_program
         returns an empty dict (This is caused by a non-existing ProgramSalesforceEnrollment for the program).
         In this case the program courses must get Institution_Hidden and Program_of_Interest from their
         other_course_settings."""
@@ -404,16 +404,16 @@ class SalesforceEnrollmentTest(TestCase):
         get_course_mock.assert_called_with('test-course-id')
         get_date_mock.assert_called_with(course_mock, 'test-email', course_id)
 
-    @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
+    @patch.object(SalesforceEnrollment, '_get_program_of_interest_from_program')
     @patch.object(SalesforceEnrollment, '_get_program_course_runs')
     @patch.object(SalesforceEnrollment, '_get_course_start_date')
     @patch.object(SalesforceEnrollment, '_get_course_key')
     @patch.object(SalesforceEnrollment, '_get_course')
-    def test_get_courses_data_case_2_with_empty_get_program_of_interest_data_and_no_other_course_settings(
+    def test_get_courses_data_case_2_with_empty_get_program_of_interest_from_program_and_no_other_course_settings(
         self, get_course_mock, get_course_key_mock, get_date_mock,
         get_runs_mock, get_poi_mock
     ):
-        """Testing _get_courses_data method for case 2 (1 program) when _get_program_of_interest_data
+        """Testing _get_courses_data method for case 2 (1 program) when _get_program_of_interest_from_program
         returns an empty dict (This is caused by a non-existing ProgramSalesforceEnrollment for the program),
         and other_course_settings has no SF settings. In this case the program courses must have empty values for
         Institution_Hidden and Program_of_Interest."""
@@ -463,7 +463,7 @@ class SalesforceEnrollmentTest(TestCase):
         get_course_mock.assert_called_with('test-course-id')
         get_date_mock.assert_called_with(course_mock, 'test-email', course_id)
 
-    @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
+    @patch.object(SalesforceEnrollment, '_get_program_of_interest_from_program')
     @patch.object(SalesforceEnrollment, '_get_program_course_runs')
     @patch.object(SalesforceEnrollment, '_get_course_start_date')
     @patch.object(SalesforceEnrollment, '_get_course_key')
@@ -558,7 +558,7 @@ class SalesforceEnrollmentTest(TestCase):
     @patch.object(SalesforceEnrollment, '_get_course')
     def test_get_courses_data_case_4(self, get_course_mock, get_course_key_mock, get_date_mock, get_runs_mock):
         """Testing _get_courses_data method for case 4 (Single course without SF in other_course_settings).
-        If the course other_course_settings has no SF settings and is not part of a program then POI/HI should
+        If the course other_course_settings has no SF settings and is not part of a program, then POI/HI should
         be empty."""
         lines = [
             {

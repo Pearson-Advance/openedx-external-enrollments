@@ -212,6 +212,37 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
         return program_of_interest
 
+    def _get_program_of_interest_from_program(self, data):
+        """
+        Retrieve the SF settings of the bundle/program associated with the purchase.
+
+        In case the purchase is not a program purchase, this method returns an empty dict. The
+        same happens when even if it is a program purchase but ProgramSalesForceEnrollment
+        does not exits for the bundle or its meta attribute is null, this method returns an
+        empty dict.
+        """
+        program_of_interest = {}
+        program = data.get("program")
+
+        if not program:
+            return program_of_interest
+
+        try:
+            bundle_id = program.get("uuid")
+            related_program = ProgramSalesforceEnrollment.objects.get(  # pylint: disable=no-member
+                bundle_id=bundle_id,
+            )
+
+            if not related_program.meta:
+                program_of_interest = {}
+                LOG.error("No meta in ProgramSalesforceEnrollment for bundle {}".format(bundle_id))
+
+            program_of_interest = related_program.meta
+        except ProgramSalesforceEnrollment.DoesNotExist:  # pylint: disable=no-member
+            LOG.error("ProgramSalesforceEnrollment not found for bundle [%s]", program.get("uuid"))
+
+        return program_of_interest
+
     def _get_program_course_runs(self, data):
         """Returns the list with the course runs of the courses associated with the program."""
         course_runs = []
@@ -245,7 +276,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         """
         courses = []
         program_course_runs = self._get_program_course_runs(data)
-        poi_data = self._get_program_of_interest_data(data, order_lines)
+        poi_data = self._get_program_of_interest_from_program(data)
         for line in order_lines:
             try:
                 course_id = line.get("course_id")
