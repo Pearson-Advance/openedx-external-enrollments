@@ -150,9 +150,10 @@ class SalesforceEnrollmentTest(TestCase):
         get_program_mock.side_effect = Exception('test')
         self.assertEqual({}, self.base._get_salesforce_data(data))  # pylint: disable=protected-access
 
+    @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.datetime')
     @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.get_user')
     @patch.object(SalesforceEnrollment, '_get_course')
-    def test_get_program_of_interest_data(self, get_course_mock, get_user_mock):
+    def test_get_program_of_interest_data(self, get_course_mock, get_user_mock, datetime_mock):
         """Testing _get_program_of_interest_data method."""
         self.assertEqual({}, self.base._get_program_of_interest_data({}, []))  # pylint: disable=protected-access
 
@@ -166,11 +167,6 @@ class SalesforceEnrollmentTest(TestCase):
             'supported_lines': lines,
             'program': {},
         }
-        expected_data = {
-            'Lead_Source': 'Open edX API',
-            'Secondary_Source': '',
-            'UTM_Parameters': '',
-        }
         course_mock = Mock()
         course_mock.other_course_settings = {
             'salesforce_data': {
@@ -181,18 +177,23 @@ class SalesforceEnrollmentTest(TestCase):
         user_mock = Mock()
         user_mock.username = 'Spiderman'
         get_user_mock.return_value = (user_mock, Mock())
-        expected_drupal = 'enrollment+course+{}+{}'.format(
-            user_mock.username,
-            datetime.utcnow().strftime('%Y/%m/%d-%H:%M'),
-        )
+        date_time = '2021/06/28-16:40:31'
+        datetime_mock.datetime.utcnow.return_value.strftime.return_value = date_time
+        expected_data = {
+            'Lead_Source': 'Open edX API',
+            'Secondary_Source': '',
+            'UTM_Parameters': '',
+            'Drupal_ID': 'enrollment+course+{}+{}'.format(
+                user_mock.username,
+                date_time,
+            ),
+        }
 
         program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
+
         get_user_mock.assert_called_with(email='test-email')
         get_course_mock.assert_called_with('test-course-id')
-
-        drupal_id = program_data.pop('Drupal_ID')
         self.assertEqual(expected_data, program_data)
-        self.assertTrue(drupal_id.startswith(expected_drupal))
 
         salesforce_data = {
             'Lead_Source': 'test-lead',
@@ -202,23 +203,24 @@ class SalesforceEnrollmentTest(TestCase):
         course_mock.other_course_settings = {'salesforce_data': salesforce_data}
 
         program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
-        drupal_id = program_data.pop('Drupal_ID')
+
         self.assertEqual(expected_data, program_data)
 
         data['program'] = {'uuid': 'test-uuid'}
         data['utm_source'] = 'test-source'
-        expected_drupal = 'enrollment+program+{}+{}'.format(
+        expected_program_drupal = 'enrollment+program+{}+{}'.format(
             user_mock.username,
-            datetime.utcnow().strftime('%Y/%m/%d-%H:%M'),
+            date_time,
         )
+        expected_data.update({'Drupal_ID': expected_program_drupal})
         ProgramSalesforceEnrollment.objects.create(  # pylint: disable=no-member
             bundle_id='test-uuid',
             meta=salesforce_data,
         )
+
         program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
-        drupal_id = program_data.pop('Drupal_ID')
+
         self.assertEqual(expected_data, program_data)
-        self.assertTrue(drupal_id.startswith(expected_drupal))
 
     @patch.object(SalesforceEnrollment, '_get_program_course_runs')
     @patch.object(SalesforceEnrollment, '_get_course_start_date')
