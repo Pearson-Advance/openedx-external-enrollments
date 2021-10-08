@@ -256,14 +256,9 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             related_program = ProgramSalesforceEnrollment.objects.get(  # pylint: disable=no-member
                 bundle_id=bundle_id,
             )
-
-            if not related_program.meta:
-                program_of_interest = {}
-                LOG.error("No meta in ProgramSalesforceEnrollment for bundle {}".format(bundle_id))
-
             program_of_interest = related_program.meta
         except ProgramSalesforceEnrollment.DoesNotExist:  # pylint: disable=no-member
-            LOG.error("ProgramSalesforceEnrollment not found for bundle [%s]", program.get("uuid"))
+            pass
 
         return program_of_interest
 
