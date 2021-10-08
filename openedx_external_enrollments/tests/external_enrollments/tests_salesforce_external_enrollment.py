@@ -1,10 +1,12 @@
 """Tests SalesforceEnrollment class file."""
+import logging
 from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.test import TestCase
 from mock import Mock, call, patch
 from opaque_keys.edx.keys import CourseKey
+from testfixtures import LogCapture
 
 from openedx_external_enrollments.external_enrollments.salesforce_external_enrollment import SalesforceEnrollment
 from openedx_external_enrollments.models import ProgramSalesforceEnrollment
@@ -221,6 +223,76 @@ class SalesforceEnrollmentTest(TestCase):
         program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
 
         self.assertEqual(expected_data, program_data)
+
+    @patch(
+        'openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.ProgramSalesforceEnrollment')
+    @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.datetime')
+    @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.get_user')
+    @patch.object(SalesforceEnrollment, '_get_course')
+    def test_get_program_of_interest_data_issue_related(
+            self, get_course_mock, get_user_mock, datetime_mock, mock_model):
+        """This test validates the behaviour of _get_program_of_interest_data for a program purchase when
+        there isn't a ProgramSalesforceEnrollment object for the bundle in the program purchase and when
+        there is a ProgramSalesforceEnrollment object but its meta attribute is empty."""
+        mock_model.DoesNotExist = BaseException
+        programsalesforceenrollment_object = Mock()
+        programsalesforceenrollment_object.meta = {}
+        mock_model.objects.get.side_effect = [
+            mock_model.DoesNotExist,
+            programsalesforceenrollment_object,
+        ]
+        lines = [
+            {
+                'user_email': 'test-email',
+                'course_id': 'test-course-id',
+            },
+        ]
+        data = {
+            'supported_lines': lines,
+            'program': {'uuid': 'test-uuid'},
+        }
+        date_time = '2021/06/28-16:40:31'
+        datetime_mock.datetime.utcnow.return_value.strftime.return_value = date_time
+        user_mock = Mock()
+        user_mock.username = 'username'
+        get_user_mock.return_value = (user_mock, Mock())
+        course_mock = Mock()
+        course_mock.other_course_settings = {
+            'salesforce_data': {
+                'Lead_Source': 'Open edX API',
+            },
+        }
+        get_course_mock.return_value = course_mock
+        log = 'ProgramSalesforceEnrollment not found for bundle [test-uuid]'
+        expected_data = {
+            'Lead_Source': 'Open edX API',
+            'UTM_Parameters': '',
+            'Secondary_Source': '',
+            'Drupal_ID': 'enrollment+program+{}+{}'.format(
+                user_mock.username,
+                date_time,
+            ),
+        }
+
+        with LogCapture(level=logging.ERROR) as log_capture:
+            result = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
+
+            log_capture.check(
+                (self.module, 'ERROR', log),
+            )
+
+        self.assertEqual(result, expected_data)
+
+        log = 'No meta in ProgramSalesforceEnrollment for bundle test-uuid'
+
+        with LogCapture(level=logging.ERROR) as log_capture:
+            result = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
+
+            log_capture.check(
+                (self.module, 'ERROR', log),
+            )
+
+        self.assertEqual(result, expected_data)
 
     @patch.object(SalesforceEnrollment, '_get_program_course_runs')
     @patch.object(SalesforceEnrollment, '_get_course_start_date')
