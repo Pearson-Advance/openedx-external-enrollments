@@ -247,7 +247,6 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         """
         program_of_interest = {}
         program = data.get("program")
-
         if not program:
             return program_of_interest
 
@@ -257,6 +256,8 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 bundle_id=bundle_id,
             )
             program_of_interest = related_program.meta
+            if not program_of_interest:
+                program_of_interest = {}
         except ProgramSalesforceEnrollment.DoesNotExist:  # pylint: disable=no-member
             pass
 
