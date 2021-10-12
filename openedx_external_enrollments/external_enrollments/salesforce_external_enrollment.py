@@ -24,7 +24,9 @@ class SalesforceEnrollment(BaseExternalEnrollment):
     """
     def __init__(self):
         """Instantiate SalesForce variables."""
-        self.CUSTOM_BUNDLE_TYPE = 'Special Offer'
+        self.user = None
+        self.user_mail = ""
+        self.user_profile = None
 
     def __str__(self):
         return "salesforce"
@@ -108,31 +110,33 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
         return token
 
-    @staticmethod
-    def _get_openedx_user(data):
+    def _get_openedx_user(self):
         """
         :param data:
         :return:
         """
         user = {}
-        order_lines = data.get("supported_lines")
-        if order_lines:
-            try:
-                email = order_lines[0].get("user_email")
-                _, openedx_profile = get_user(email=email)
-
-                user["Email"] = email
-                if openedx_profile.user.first_name:
-                    user["FirstName"] = openedx_profile.user.first_name
-                    user["LastName"] = openedx_profile.user.last_name
-                else:
-                    first_name, last_name = openedx_profile.name.split(" ", 1)
-                    user["FirstName"] = first_name.strip(" ")
-                    user["LastName"] = last_name.strip(" ")
-            except Exception:  # pylint: disable=broad-except
-                pass
+        user["Email"] = self.user_mail
+        try:
+            if self.user_profile.user.first_name:
+                user["FirstName"] = self.user_profile.user.first_name
+                user["LastName"] = self.user_profile.user.last_name
+            else:
+                first_name, last_name = self.user_profile.name.split(" ", 1)
+                user["FirstName"] = first_name.strip(" ")
+                user["LastName"] = last_name.strip(" ")
+        except Exception:  # pylint: disable=broad-except
+            pass
 
         return user
+
+    def _prepare_data(self, data):
+        """Assign the instance variables used across different methods."""
+        order_lines = data.get("supported_lines")
+
+        if order_lines:
+            self.user_mail = order_lines[0].get("user_email")
+            self.user, self.user_profile = get_user(email=self.user_mail)
 
     def _get_salesforce_data(self, data):
         """
@@ -191,12 +195,6 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         """
         program_of_interest = {}
         program = data.get("program")
-        request_time = datetime.datetime.utcnow()
-        try:
-            email = order_lines[0].get("user_email")
-            openedx_user, _ = get_user(email=email)
-        except Exception:  # pylint: disable=broad-except
-            return program_of_interest
 
         if program:
             bundle_id = program.get("uuid")
@@ -218,8 +216,8 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
         program_of_interest["Drupal_ID"] = "enrollment+{}+{}+{}".format(
             "program" if program else "course",
-            openedx_user.username,
-            request_time.strftime("%Y/%m/%d-%H:%M:%S")
+            self.user.username,
+            datetime.datetime.utcnow().strftime("%Y/%m/%d-%H:%M:%S")
         )
         program_of_interest["Lead_Source"] = program_of_interest.get(
             "Lead_Source",
@@ -309,7 +307,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 course_data["CourseName"] = salesforce_settings.get("Program_Name") or course.display_name
                 course_data["CourseID"] = "{}+{}".format(course_key.org, course_key.course)
                 course_data["CourseRunID"] = course_id
-                course_data["CourseStartDate"] = self._get_course_start_date(course, line.get("user_email"), course_id)
+                course_data["CourseStartDate"] = self._get_course_start_date(course, course_id)
                 course_data["CourseEndDate"] = course.end.strftime("%Y-%m-%d")
                 course_data["CourseDuration"] = "0"
                 course_data["Institution_Hidden"] = ih_from_course
@@ -348,15 +346,12 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             course.other_course_settings.get("external_course_target")
         )
 
-    @staticmethod
-    def _get_course_start_date(course, email, course_id):
+    def _get_course_start_date(self, course, course_id):
         """
         Return the course date start.
         """
-
-        user, _ = get_user(email=email)
         course_key = CourseKey.from_string(course_id)
-        enrollment = CourseEnrollment.get_enrollment(user, course_key)
+        enrollment = CourseEnrollment.get_enrollment(self.user, course_key)
 
         if course.self_paced:
             dates_to_check = [enrollment.created, course.start]
@@ -391,7 +386,9 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             "enrollment": {}
         }
 
-        payload["enrollment"].update(self._get_openedx_user(data))
+        self._prepare_data(data)
+
+        payload["enrollment"].update(self._get_openedx_user())
 
         payload["enrollment"].update(self._get_salesforce_data(data))
 
