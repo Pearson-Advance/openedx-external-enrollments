@@ -226,6 +226,14 @@ class SalesforceEnrollment(BaseExternalEnrollment):
             "Secondary_Source",
             "",
         )
+        program_of_interest["Type_Hidden"] = program_of_interest.get(
+            "Type_Hidden",
+            "",
+        )
+        program_of_interest["Company"] = program_of_interest.get(
+            "Company",
+            "",
+        )
 
         return program_of_interest
 
@@ -312,8 +320,11 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                     course_data["Institution_Hidden"] = poi_data.get("Institution_Hidden", ih_from_course)
                     course_data["Program_of_Interest"] = poi_data.get("Program_of_Interest", poi_from_course)
 
-            except Exception:  # pylint: disable=broad-except
-                pass
+            except AttributeError as error:
+                LOG.error('Course [{}] is not properly configured. Reason: [{}]'.format(
+                    course_id,
+                    str(error),
+                ))
             else:
                 courses.append(course_data)
 

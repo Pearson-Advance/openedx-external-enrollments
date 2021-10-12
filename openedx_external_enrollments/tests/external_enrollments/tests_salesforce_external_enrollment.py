@@ -264,6 +264,8 @@ class SalesforceEnrollmentTest(TestCase):
         expected_data = {
             'Lead_Source': '',
             'Secondary_Source': '',
+            'Type_Hidden': '',
+            'Company': '',
         }
 
         with LogCapture(level=logging.ERROR) as log_capture:
@@ -341,9 +343,33 @@ class SalesforceEnrollmentTest(TestCase):
 
         self.assertEqual(result, [expected_data])
 
-        get_course_mock.side_effect = Exception('test-exception')
+        log = (
+            'Course [test-course-id] is not properly configured. Reason: '
+            '[\'NoneType\' object has no attribute \'strftime\']'
+        )
+        course_mock.end = None
 
-        result = self.base._get_courses_data({}, lines)  # pylint: disable=protected-access
+        with LogCapture(level=logging.ERROR) as log_capture:
+            result = self.base._get_courses_data({}, lines)  # pylint: disable=protected-access
+
+            log_capture.check(
+                (self.module, 'ERROR', log),
+            )
+        self.assertEqual(result, [])
+
+        log = (
+            'Course [test-course-id] is not properly configured. Reason: '
+            '[\'NoneType\' object has no attribute \'get\']'
+        )
+        course_mock.other_course_settings = None
+        course_mock.end = now
+
+        with LogCapture(level=logging.ERROR) as log_capture:
+            result = self.base._get_courses_data({}, lines)  # pylint: disable=protected-access
+
+            log_capture.check(
+                (self.module, 'ERROR', log),
+            )
 
         self.assertEqual(result, [])
 
