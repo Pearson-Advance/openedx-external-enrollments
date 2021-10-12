@@ -146,15 +146,20 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         """
         salesforce_data = {}
         order_lines = data.get("supported_lines")
-        if order_lines:
-            try:
-                salesforce_data.update(self._get_program_of_interest_data(data, order_lines))
-                salesforce_data["Order_Number"] = data.get("number")
-                salesforce_data["Purchase_Type"] = "Program" if data.get("program") else "Course"
-                salesforce_data["PaymentAmount"] = data.get("paid_amount")
-                salesforce_data["Amount_Currency"] = data.get("currency")
-            except Exception:  # pylint: disable=broad-except
-                pass
+        program = data.get("program")
+
+        salesforce_data.update(self._get_salesforce_settings(data, order_lines))
+
+        salesforce_data["Order_Number"] = data.get("number")
+        salesforce_data["Purchase_Type"] = "Program" if program else "Course"
+        salesforce_data["PaymentAmount"] = data.get("paid_amount")
+        salesforce_data["Amount_Currency"] = data.get("currency")
+        salesforce_data["UTM_Parameters"] = data.get("utm_params", "")
+        salesforce_data["Drupal_ID"] = "enrollment+{}+{}+{}".format(
+            "program" if program else "course",
+            self.user.username,
+            datetime.datetime.utcnow().strftime("%Y/%m/%d-%H:%M:%S"),
+        )
 
         return salesforce_data
 
@@ -167,15 +172,9 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 return program_of_interest
         return {}
 
-    def _get_program_of_interest_data(self, data, order_lines):
+    def _get_salesforce_settings(self, data, order_lines):
         """
-        Return the following data:
-        - Drupal_ID
-        - Lead_Source
-        - UTM_Parameters
-        - Secondary_Source
-
-        Where the above data is retrieved depends on the case:
+        Where the SF settings are extracted from depends on the case:
 
         1. If program purchase and there is ProgramSalesforceEnrollment for the program with its
         meta attribute populated, then the SF settings get pulled from this meta attribute.
@@ -214,17 +213,8 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         else:
             program_of_interest = self._get_program_of_interest_from_courses(order_lines)
 
-        program_of_interest["Drupal_ID"] = "enrollment+{}+{}+{}".format(
-            "program" if program else "course",
-            self.user.username,
-            datetime.datetime.utcnow().strftime("%Y/%m/%d-%H:%M:%S")
-        )
         program_of_interest["Lead_Source"] = program_of_interest.get(
             "Lead_Source",
-            "",
-        )
-        program_of_interest["UTM_Parameters"] = data.get(
-            "utm_params",
             "",
         )
         program_of_interest["Secondary_Source"] = program_of_interest.get(
