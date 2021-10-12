@@ -177,15 +177,6 @@ class SalesforceEnrollment(BaseExternalEnrollment):
 
         return salesforce_data
 
-    def _get_program_of_interest_from_courses(self, order_lines):
-        """This method returns SF settings data from the first course with SF metadata."""
-        for line in order_lines:
-            course = self._get_course(line.get("course_id"))
-            program_of_interest = course.other_course_settings.get("salesforce_data")
-            if program_of_interest:
-                return program_of_interest
-        return {}
-
     def _get_program_course_runs(self, data):
         """Returns the list with the course runs of the courses associated with the program."""
         course_runs = []
