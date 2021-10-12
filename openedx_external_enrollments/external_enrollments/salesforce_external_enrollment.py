@@ -149,7 +149,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
         email = order_lines[0].get("user_email")
         openedx_user, _ = get_user(email=email)
         try:
-            salesforce_data.update(self._get_program_of_interest_data(data, order_lines))
+            salesforce_data.update(self._get_salesforce_settings(data, order_lines))
             salesforce_data["Order_Number"] = data.get("number")
             salesforce_data["Purchase_Type"] = "Program" if program else "Course"
             salesforce_data["PaymentAmount"] = data.get("paid_amount")
@@ -174,7 +174,7 @@ class SalesforceEnrollment(BaseExternalEnrollment):
                 return program_of_interest
         return {}
 
-    def _get_program_of_interest_data(self, data, order_lines):
+    def _get_salesforce_settings(self, data, order_lines):
         """
         Return SF settings from course/program and the following data:
         - Lead_Source

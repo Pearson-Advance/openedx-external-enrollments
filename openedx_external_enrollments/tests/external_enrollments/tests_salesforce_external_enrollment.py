@@ -114,7 +114,7 @@ class SalesforceEnrollmentTest(TestCase):
 
     @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.datetime')
     @patch('openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.get_user')
-    @patch.object(SalesforceEnrollment, '_get_program_of_interest_data')
+    @patch.object(SalesforceEnrollment, '_get_salesforce_settings')
     def test_get_salesforce_data(self, get_program_mock, get_user_mock, datetime_mock):
         """Testing _get_salesforce_data method."""
         data = {
@@ -173,8 +173,8 @@ class SalesforceEnrollmentTest(TestCase):
         self.assertEqual({}, self.base._get_salesforce_data(data))  # pylint: disable=protected-access
 
     @patch.object(SalesforceEnrollment, '_get_program_of_interest_from_courses')
-    def test_get_program_of_interest_data(self, mock_poi_from_courses):
-        """Testing _get_program_of_interest_data method."""
+    def test_get_salesforce_settings(self, mock_poi_from_courses):
+        """Testing _get_salesforce_settings method."""
         lines = [
             {
                 'user_email': 'test-email',
@@ -209,7 +209,7 @@ class SalesforceEnrollmentTest(TestCase):
             },
         ]
 
-        program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
+        program_data = self.base._get_salesforce_settings(data, lines)  # pylint: disable=protected-access
 
         self.assertEqual(expected_data, program_data)
 
@@ -232,15 +232,15 @@ class SalesforceEnrollmentTest(TestCase):
             },
         )
 
-        program_data = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
+        program_data = self.base._get_salesforce_settings(data, lines)  # pylint: disable=protected-access
 
         self.assertEqual(expected_data, program_data)
 
     @patch(
         'openedx_external_enrollments.external_enrollments.salesforce_external_enrollment.ProgramSalesforceEnrollment')
-    def test_get_program_of_interest_data_missing_programsalesforceenrollment_and_meta(
+    def test_get_salesforce_settings_missing_programsalesforceenrollment_and_meta(
             self, mock_model):
-        """This test validates the behaviour of _get_program_of_interest_data for a program purchase when
+        """This test validates the behaviour of _get_salesforce_settings for a program purchase when
         there isn't a ProgramSalesforceEnrollment object for the bundle in the program purchase and when
         there is a ProgramSalesforceEnrollment object but its meta attribute is empty."""
         mock_model.DoesNotExist = BaseException
@@ -267,7 +267,7 @@ class SalesforceEnrollmentTest(TestCase):
         }
 
         with LogCapture(level=logging.ERROR) as log_capture:
-            result = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
+            result = self.base._get_salesforce_settings(data, lines)  # pylint: disable=protected-access
 
             log_capture.check(
                 (self.module, 'ERROR', log),
@@ -278,7 +278,7 @@ class SalesforceEnrollmentTest(TestCase):
         log = 'No meta in ProgramSalesforceEnrollment for bundle test-uuid'
 
         with LogCapture(level=logging.ERROR) as log_capture:
-            result = self.base._get_program_of_interest_data(data, lines)  # pylint: disable=protected-access
+            result = self.base._get_salesforce_settings(data, lines)  # pylint: disable=protected-access
 
             log_capture.check(
                 (self.module, 'ERROR', log),
