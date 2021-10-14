@@ -1,3 +1,8 @@
+### Version 3.11.2 - October 14, 2021
+**Changes:**
+
+  - Improve SF Integration.
+
 ### Version 3.11.1 - October 04, 2021
 **Changes:**
 
