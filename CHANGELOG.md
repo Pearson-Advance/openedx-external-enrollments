@@ -1,3 +1,8 @@
+### Version 3.11.3 - December 2, 2021
+**Changes:**
+
+  - Update Greenfig Integration.
+
 ### Version 3.11.2 - October 14, 2021
 **Changes:**
 
