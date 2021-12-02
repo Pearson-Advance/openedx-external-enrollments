@@ -29,8 +29,10 @@ class GreenfigInstanceExternalEnrollmentTest(TestCase):
         course_settings = {
             'external_course_run_id': 'course_id+10',
         }
-        expected_data = u'08-04-2020 10:50:34, John Doe, John, Doe, johndoe@email.com, course_id+10, true\n'
-        expected_data += u'08-04-2020 10:50:34, Mary Brown, Mary, Brown, marybrown@email.com, course_id+10, true\n'
+        dropbox_response_text = '08-04-2020 10:50:34, John Doe, John, Doe, johndoe@email.com, course_id+10, true\n'
+        expected_enrollment_data = '08-04-2020 10:50:34, Mary Brown, Mary, Brown, '\
+                                   'marybrown@email.com, course_id+10, true\n'
+        expected_file_data = dropbox_response_text + expected_enrollment_data
         user = Mock()
         user.first_name = 'Mary'
         user.last_name = 'Brown'
@@ -39,12 +41,12 @@ class GreenfigInstanceExternalEnrollmentTest(TestCase):
         get_user_mock.return_value = (user, '')
         datetime_now_mock.now.return_value.strftime.return_value = '08-04-2020 10:50:34'
         dropbox_response = Mock()
-        dropbox_response.text = u'08-04-2020 10:50:34, John Doe, John, Doe, johndoe@email.com, course_id+10, true\n'
+        dropbox_response.text = dropbox_response_text
         _get_course_list_mock.return_value = dropbox_response
 
         self.assertEqual(
             self.base._get_enrollment_data(data, course_settings),  # pylint: disable=protected-access
-            expected_data,
+            (expected_file_data, expected_enrollment_data)
         )
 
     def test_get_enrollment_url_default_settings(self):

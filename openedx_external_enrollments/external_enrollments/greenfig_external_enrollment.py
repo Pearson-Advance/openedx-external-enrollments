@@ -54,10 +54,12 @@ class GreenfigInstanceExternalEnrollment(BaseExternalEnrollment):
         }
 
     def _get_enrollment_data(self, data, course_settings):
-        """Returns a file in memory with a new or updated enroll."""
+        """Returns a tuple made up of a file in memory with a new or updated enroll, and the enrollment data.
+
+        :return: (file, string)"""
         user, _ = get_user(email=data.get('user_email'))
         dropbox_file = self._get_course_list(course_settings).text
-        enrollment_data = u'{date}, {fullname}, {first_name}, {last_name}, {email}, {course_id}, {enrolled}\n'.format(
+        enrollment_data = '{date}, {fullname}, {first_name}, {last_name}, {email}, {course_id}, {enrolled}\n'.format(
             date=datetime.now().strftime(settings.DROPBOX_DATE_FORMAT),
             fullname=user.profile.name,
             first_name=user.first_name,
@@ -71,7 +73,7 @@ class GreenfigInstanceExternalEnrollment(BaseExternalEnrollment):
         temp_file.write(dropbox_file)
         temp_file.seek(0)
 
-        return temp_file.getvalue()
+        return temp_file.getvalue(), enrollment_data
 
     def _get_enrollment_url(self, course_settings):
         """Gets dropbox upload file url."""
@@ -98,3 +100,46 @@ class GreenfigInstanceExternalEnrollment(BaseExternalEnrollment):
             return str(error), status.HTTP_500_INTERNAL_SERVER_ERROR
         else:
             return response
+
+    def _post_enrollment(self, data, course_settings=None):
+        """
+        Get request data and execute the post request.
+        """
+        url = self._get_enrollment_url(course_settings)
+        json_data, enrollment_data = self._get_enrollment_data(data, course_settings)
+        LOG.info('calling enrollment for [%s] with data: %s', self.__str__(), json_data)
+        LOG.info('calling enrollment for [%s] with url: %s', self.__str__(), url)
+        LOG.info('calling enrollment for [%s] with course settings: %s', self.__str__(), course_settings)
+        log_details = {
+            'request_payload': enrollment_data,
+            'url': url,
+            'course_advanced_settings': course_settings,
+        }
+
+        try:
+            response = self._execute_post(
+                url=url,
+                headers=self._get_enrollment_headers(),
+                json_data=json_data,
+            )
+        except Exception as error:  # pylint: disable=broad-except
+            log_details['response'] = {'error': 'Failed to complete enrollment. Reason: %s' % str(error)}
+
+            LOG.error('Failed to complete enrollment. Reason: %s', str(error))
+            EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
+                request_type=str(self),
+                details=log_details,
+            )
+
+            return str(error), status.HTTP_400_BAD_REQUEST
+        else:
+            json_response = self._get_json_response(response)
+            log_details['response'] = json_response
+
+            LOG.info('External enrollment response for [%s] -- %s', self.__str__(), json_response)
+            EnrollmentRequestLog.objects.create(  # pylint: disable=no-member
+                request_type=str(self),
+                details=log_details,
+            )
+
+            return json_response, status.HTTP_200_OK
