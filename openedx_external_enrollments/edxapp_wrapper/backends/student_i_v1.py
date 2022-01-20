@@ -1,7 +1,13 @@
 """Student backend file."""
 
-from student.models import CourseEnrollment, get_user  # pylint: disable=import-error
-from student.signals import ENROLLMENT_TRACK_UPDATED, UNENROLL_DONE  # pylint: disable=import-error
+from common.djangoapps.student.models import (  # pylint: disable=no-name-in-module, import-error
+    CourseEnrollment,
+    get_user,
+)
+from common.djangoapps.student.signals import (  # pylint: disable=no-name-in-module, import-error
+    ENROLLMENT_TRACK_UPDATED,
+    UNENROLL_DONE,
+)
 
 
 def get_user_backend(*args, **kwargs):

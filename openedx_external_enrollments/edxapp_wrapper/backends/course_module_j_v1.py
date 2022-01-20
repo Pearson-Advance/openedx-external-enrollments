@@ -1,5 +1,5 @@
 """ Backend abstraction. """
-from course_modes.models import CourseMode  # pylint: disable=import-error
+from common.djangoapps.course_modes.models import CourseMode  # pylint: disable=no-name-in-module, import-error
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview  # pylint: disable=import-error
 
 

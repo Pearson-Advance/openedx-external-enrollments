@@ -4,9 +4,12 @@ Course home concrete module
 import datetime
 
 import pytz
-from courseware.courses import get_course_by_id  # pylint: disable=import-error
+from common.djangoapps.student.models import (  # pylint: disable=no-name-in-module, import-error
+    CourseEnrollment,
+    anonymous_id_for_user,
+)
+from lms.djangoapps.courseware.courses import get_course_by_id  # pylint: disable=import-error
 from opaque_keys.edx.keys import CourseKey
-from student.models import CourseEnrollment, anonymous_id_for_user  # pylint: disable=import-error
 from submissions import api as submissions_api  # pylint: disable=import-error
 
 from openedx_external_enrollments.factory import ExternalEnrollmentFactory
