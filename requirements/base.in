@@ -3,8 +3,8 @@
 
 celery
 Django
-djangorestframework==3.9.4
-edx-opaque-keys==2.1.0
+djangorestframework==3.12.4
+edx-opaque-keys==2.2.0
 jsonfield2
 oauthlib
 requests-oauthlib
