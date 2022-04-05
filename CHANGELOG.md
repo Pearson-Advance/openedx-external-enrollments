@@ -1,3 +1,7 @@
+### Version 3.10.2 - April 5, 2022
+**Changes:**
+
+  - Enabling SF controller using a configuration.
 ### Version 3.10.1 - September 16, 2021
 **Changes:**
 
