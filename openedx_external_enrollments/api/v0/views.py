@@ -12,6 +12,7 @@ from openedx_external_enrollments.edxapp_wrapper.get_courseware import get_cours
 from openedx_external_enrollments.edxapp_wrapper.get_edx_rest_framework_extensions import get_jwt_authentication
 from openedx_external_enrollments.edxapp_wrapper.get_openedx_authentication import get_oauth2_authentication
 from openedx_external_enrollments.edxapp_wrapper.get_openedx_permissions import get_api_key_permission
+from openedx_external_enrollments.edxapp_wrapper.get_site_configuration import configuration_helpers
 from openedx_external_enrollments.external_enrollments.salesforce_external_enrollment import SalesforceEnrollment
 from openedx_external_enrollments.factory import ExternalEnrollmentFactory
 from openedx_external_enrollments.tasks import generate_salesforce_enrollment
@@ -82,6 +83,7 @@ class SalesforceEnrollmentView(APIView):
     """
     SalesforceEnrollmentView APIView.
     """
+    CONTROLLER_DISABLED_MESSAGE = "Salesforce enrollment controller not enabled for this site."
 
     authentication_classes = [
         get_jwt_authentication(),
@@ -97,7 +99,7 @@ class SalesforceEnrollmentView(APIView):
         """
         try:
             # Getting the corresponding enrollment controller
-            SalesforceEnrollment()
+            salesforce_controller = SalesforceEnrollment()
         except Exception:  # pylint: disable=broad-except
             LOG.info("Can't instantiate Salesforce enrollment controller")
             return JsonResponse(
@@ -105,6 +107,13 @@ class SalesforceEnrollmentView(APIView):
                 status=status.HTTP_200_OK,
             )
         else:
+            if str(salesforce_controller) not in configuration_helpers.get_value("VALID_EXTERNAL_TARGETS", []):
+                LOG.info(self.CONTROLLER_DISABLED_MESSAGE)
+                return JsonResponse(
+                    {"info": self.CONTROLLER_DISABLED_MESSAGE},
+                    status=status.HTTP_200_OK,
+                )
+
             # Now, let's try to call the asynchronous enrollment
             generate_salesforce_enrollment.delay(
                 request.data
@@ -112,5 +121,4 @@ class SalesforceEnrollmentView(APIView):
             return JsonResponse(
                 {"info": "Salesforce enrollment request sent..."},
                 status=status.HTTP_200_OK,
-                safe=False,
             )
