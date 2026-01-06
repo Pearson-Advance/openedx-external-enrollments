@@ -1,3 +1,7 @@
+# 🚨 IMPORTANT NOTE 🚨
+
+This repository has been deprecated. No active development or maintenance efforts will be made on this repository. Use it at your own risk.
+
 # External Enrollments
 
 ## Features
